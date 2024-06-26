@@ -2,6 +2,7 @@
 
 // Checkout
 const CheckoutPurchaseRequest = require('./resources/checkout/purchase');
+const CheckoutIAPurchaseRequest = require('./resources/checkout/iapurchase');
 const CheckoutRefundRequest = require('./resources/checkout/refund');
 const CheckoutReversalRequest = require('./resources/checkout/reversal');
 const GetPaymentStatusRequest = require('./resources/checkout/get-payment-status');
@@ -42,6 +43,10 @@ module.exports = (mypos) => {
     mypos.checkout = {
         purchase: (params, response) => {
             new CheckoutPurchaseRequest(mypos, params).send(response);
+        },
+
+        iapurchase: (params, response) => {
+            new CheckoutIAPurchaseRequest(mypos, params).send(response);
         },
 
         refund: (params, callback) => {

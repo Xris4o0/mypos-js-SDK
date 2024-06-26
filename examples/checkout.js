@@ -33,6 +33,9 @@ app.get('/', (req, res) => {
 app.post('/purchase', (req, res) => {
     mypos.checkout.purchase(purchaseParams, res);
 });
+app.post('/iapurchase', (req, res) => {
+    mypos.checkout.iapurchase(purchaseParams, res);
+});
 app.post('/refund', (req, res) => {
     mypos.checkout.refund(refundParams(req.body.trnRef), (result) => {
         res.send(result);
