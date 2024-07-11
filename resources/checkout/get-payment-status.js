@@ -16,7 +16,7 @@ class GetPaymentStatusRequest extends CheckoutApiRequest {
             IPCVersion: version,
             IPCLanguage: language,
             SID: sid,
-            walletnumber: walletNumber,
+            WalletNumber: walletNumber,
             KeyIndex: mypos.config.checkout.keyIndex,
             OrderID: params.orderId,
             OutputFormat: outputFormat
@@ -27,3 +27,5 @@ class GetPaymentStatusRequest extends CheckoutApiRequest {
 }
 
 module.exports = GetPaymentStatusRequest;
+
+// FINISHED

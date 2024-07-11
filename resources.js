@@ -1,11 +1,18 @@
 'use strict';
 
 // Checkout
-const CheckoutPurchaseRequest = require('./resources/checkout/purchase');
+const CheckoutAuthorizationCaptureRequest = require('./resources/checkout/authorization-capture');
+const CheckoutAuthorizationListRequest = require('./resources/checkout/authorization-list');
+const CheckoutAuthorizationReverseRequest = require('./resources/checkout/authorization-reverse');
+const CheckoutAuthorizationRequest = require('./resources/checkout/authorization');
+const CheckoutGetPaymentStatusRequest = require('./resources/checkout/get-payment-status');
+
 const CheckoutIAPurchaseRequest = require('./resources/checkout/iapurchase');
+
+const CheckoutPurchaseRequest = require('./resources/checkout/purchase');
 const CheckoutRefundRequest = require('./resources/checkout/refund');
+
 const CheckoutReversalRequest = require('./resources/checkout/reversal');
-const GetPaymentStatusRequest = require('./resources/checkout/get-payment-status');
 
 // Devices
 const ListDevicesRequest = require('./resources/devices/list-devices');
@@ -41,6 +48,22 @@ const DeleteWebHookSubscriptionsRequest = require('./resources/webHooks/subscrip
 
 module.exports = (mypos) => {
     mypos.checkout = {
+        authorizationcapture: (params, response) => {
+            new CheckoutAuthorizationCaptureRequest(mypos, params).send(response);
+        },
+        
+        authorizationlist: (params, response) => {
+            new CheckoutAuthorizationListRequest(mypos, params).send(response);
+        },
+        
+        authorizationreverse: (params, response) => {
+            new CheckoutAuthorizationReverseRequest(mypos, params).send(response);
+        },
+        
+        authorization: (params, response) => {
+            new CheckoutAuthorizationRequest(mypos, params).send(response);
+        },
+
         purchase: (params, response) => {
             new CheckoutPurchaseRequest(mypos, params).send(response);
         },
@@ -58,7 +81,7 @@ module.exports = (mypos) => {
         },
 
         getPaymentStatus: (params, callback) => {
-            new GetPaymentStatusRequest(mypos, params).send(callback);
+            new CheckoutGetPaymentStatusRequest(mypos, params).send(callback);
         },
     };
 

@@ -18,7 +18,7 @@ class CheckoutReversalRequest extends CheckoutApiRequest {
             IPCVersion: version,
             IPCLanguage: language,
             SID: sid,
-            walletnumber: walletNumber,
+            WalletNumber: walletNumber,
             KeyIndex: mypos.config.checkout.keyIndex,
             IPC_Trnref: params.trnRef,
             OrderID: orderId,
@@ -30,3 +30,5 @@ class CheckoutReversalRequest extends CheckoutApiRequest {
 }
 
 module.exports = CheckoutReversalRequest;
+
+// FINISHED

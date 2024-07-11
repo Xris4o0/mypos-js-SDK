@@ -4,7 +4,7 @@ const uuidv4 = require('uuid/v4');
 const utils = require('../../utils/common');
 const CheckoutApiRequest = require('../abstract/checkout-api-request');
 
-class CheckoutPurchaseRequest extends CheckoutApiRequest {
+class CheckoutIAPurchaseRequest extends CheckoutApiRequest {
     constructor(mypos, params) {
         let language = utils.safeVal(params.lang, utils.safeVal(mypos.config.checkout.lang, 'EN'));
         let version = utils.safeVal(params.version, utils.safeVal(mypos.config.checkout.version, '1.4'));
@@ -15,12 +15,12 @@ class CheckoutPurchaseRequest extends CheckoutApiRequest {
         let okUrl = utils.safeVal(params.okUrl, mypos.config.checkout.okUrl);
         let cancelUrl = utils.safeVal(params.cancelUrl, mypos.config.checkout.cancelUrl);
         let notifyUrl = utils.safeVal(params.notifyUrl, mypos.config.checkout.notifyUrl);
-        let cardTokenRequest = utils.safeVal(params.cardTokenRequest, utils.safeVal(mypos.config.checkout.cardTokenRequest, 0));
+        let cardToken = utils.safeVal(params.cardToken, utils.safeVal(mypos.config.checkout.cardToken, 0));
         let paymentMethod = utils.safeVal(params.paymentMethod, utils.safeVal(mypos.config.checkout.paymentMethod, 1));
         let paymentParametersRequired = utils.safeVal(params.paymentParametersRequired, utils.safeVal(mypos.config.checkout.paymentParametersRequired, 1));
 
         const purchaseParams = {
-            IPCmethod: 'IPCPurchase',
+            IPCmethod: 'IPCAuthorizationList',
             IPCVersion: version,
             IPCLanguage: language,
             SID: sid,
@@ -31,7 +31,7 @@ class CheckoutPurchaseRequest extends CheckoutApiRequest {
             URL_OK: okUrl,
             URL_Cancel: cancelUrl,
             URL_Notify: notifyUrl,
-            CardTokenRequest: cardTokenRequest,
+            CardToken: cardToken,
             KeyIndex: mypos.config.checkout.keyIndex,
             PaymentParametersRequired: paymentParametersRequired,
             PaymentMethod: paymentMethod,
@@ -60,6 +60,4 @@ class CheckoutPurchaseRequest extends CheckoutApiRequest {
     }
 }
 
-module.exports = CheckoutPurchaseRequest;
-
-// FINISHED
+module.exports = CheckoutIAPurchaseRequest;

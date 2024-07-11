@@ -20,11 +20,11 @@ class CheckoutIAPurchaseRequest extends CheckoutApiRequest {
         let paymentParametersRequired = utils.safeVal(params.paymentParametersRequired, utils.safeVal(mypos.config.checkout.paymentParametersRequired, 1));
 
         const purchaseParams = {
-            IPCmethod: 'IPCIAPurchase',
+            IPCmethod: 'IPCPaymentSessionCreate',
             IPCVersion: version,
             IPCLanguage: language,
             SID: sid,
-            walletnumber: walletNumber,
+            WalletNumber: walletNumber,
             Amount: params.amount,
             Currency: currency,
             OrderID: orderId,

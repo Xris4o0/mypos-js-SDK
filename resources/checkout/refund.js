@@ -19,7 +19,7 @@ class CheckoutRefundRequest extends CheckoutApiRequest {
             IPCVersion: version,
             IPCLanguage: language,
             SID: sid,
-            walletnumber: walletNumber,
+            WalletNumber: walletNumber,
             KeyIndex: mypos.config.checkout.keyIndex,
             IPC_Trnref: params.trnRef,
             Amount: params.amount,
@@ -33,3 +33,5 @@ class CheckoutRefundRequest extends CheckoutApiRequest {
 }
 
 module.exports = CheckoutRefundRequest;
+
+// FINISHED
