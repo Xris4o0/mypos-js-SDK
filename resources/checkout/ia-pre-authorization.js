@@ -41,3 +41,5 @@ class CheckoutIAPreAuthorizationeRequest extends CheckoutApiRequest {
 }
 
 module.exports = CheckoutIAPreAuthorizationeRequest;
+
+// FINISHED
