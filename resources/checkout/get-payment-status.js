@@ -3,7 +3,7 @@
 const utils = require('../../utils/common');
 const CheckoutApiRequest = require('../abstract/checkout-api-request');
 
-class GetPaymentStatusRequest extends CheckoutApiRequest {
+class CheckoutGetPaymentStatusRequest extends CheckoutApiRequest {
     constructor(mypos, params) {
         let language = utils.safeVal(params.lang, utils.safeVal(mypos.config.checkout.lang, 'EN'));
         let version = utils.safeVal(params.version, utils.safeVal(mypos.config.checkout.version, '1.4'));
@@ -26,6 +26,6 @@ class GetPaymentStatusRequest extends CheckoutApiRequest {
     }
 }
 
-module.exports = GetPaymentStatusRequest;
+module.exports = CheckoutGetPaymentStatusRequest;
 
 // FINISHED
