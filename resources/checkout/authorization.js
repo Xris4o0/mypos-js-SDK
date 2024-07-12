@@ -13,7 +13,6 @@ class CheckoutAuthorizationRequest extends CheckoutApiRequest {
         let currency = utils.safeVal(params.currency, mypos.config.checkout.currency);
         let orderId = utils.safeVal(params.orderId, uuidv4());
         let cardToken = utils.safeVal(params.cardToken, utils.safeVal(mypos.config.checkout.cardToken, 0));
-        let itemName = utils.safeVal(params.itemName, utils.safeVal(mypos.config.checkout.itemName, 'Test Item'));
         let outputFormat = utils.safeVal(params.outputFormat, utils.safeVal(mypos.config.checkout.outputFormat, 'JSON'));
 
         const authorizationParams = {
@@ -26,9 +25,9 @@ class CheckoutAuthorizationRequest extends CheckoutApiRequest {
             SID: sid,
             WalletNumber: walletNumber,
             KeyIndex: mypos.config.checkout.keyIndex,
-            //AccountSettlement: 11111111119,
-            ItemName: itemName,
-            //Note: '',
+            AccountSettlement: params.AccountSettlement,
+            ItemName: params.itemName,
+            Note: params.note,
             CardToken: cardToken,
             OutputFormat: outputFormat
         };
