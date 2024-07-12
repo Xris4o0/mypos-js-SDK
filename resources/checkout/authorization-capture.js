@@ -23,7 +23,7 @@ class CheckoutAuthorizationCaptureRequest extends CheckoutApiRequest {
             SID: sid,
             WalletNumber: walletNumber,
             KeyIndex: mypos.config.checkout.keyIndex,
-            OutputFormat: XML, // XML or JSON
+            // OutputFormat: XML, // XML or JSON
         };
 
         super(mypos, captureParams);
