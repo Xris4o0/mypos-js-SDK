@@ -12,6 +12,7 @@ class CheckoutAuthorizationCaptureRequest extends CheckoutApiRequest {
         let walletNumber = utils.safeVal(params.sid, mypos.config.checkout.clientNumber);
         let currency = utils.safeVal(params.currency, mypos.config.checkout.currency);
         let orderId = utils.safeVal(params.orderId, uuidv4());
+        let outputFormat = utils.safeVal(params.outputFormat, utils.safeVal(mypos.config.checkout.outputFormat, 'JSON'));
 
         const captureParams = {
             IPCmethod: 'IPCAuthorizationCapture',
@@ -23,7 +24,7 @@ class CheckoutAuthorizationCaptureRequest extends CheckoutApiRequest {
             SID: sid,
             WalletNumber: walletNumber,
             KeyIndex: mypos.config.checkout.keyIndex,
-            // OutputFormat: XML, // XML or JSON
+            OutputFormat: outputFormat
         };
 
         super(mypos, captureParams);

@@ -14,6 +14,7 @@ class CheckoutAuthorizationRequest extends CheckoutApiRequest {
         let orderId = utils.safeVal(params.orderId, uuidv4());
         let cardToken = utils.safeVal(params.cardToken, utils.safeVal(mypos.config.checkout.cardToken, 0));
         let itemName = utils.safeVal(params.itemName, utils.safeVal(mypos.config.checkout.itemName, 'Test Item'));
+        let outputFormat = utils.safeVal(params.outputFormat, utils.safeVal(mypos.config.checkout.outputFormat, 'JSON'));
 
         const authorizationParams = {
             IPCmethod: 'IPCAuthorization',
@@ -29,7 +30,7 @@ class CheckoutAuthorizationRequest extends CheckoutApiRequest {
             ItemName: itemName,
             //Note: '',
             CardToken: cardToken,
-            //OutputFormat: XML, // XML or JSON
+            OutputFormat: outputFormat
         };
 
         super(mypos, authorizationParams);

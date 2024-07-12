@@ -11,6 +11,7 @@ class CheckoutAuthorizationReverseRequest extends CheckoutApiRequest {
         let sid = utils.safeVal(params.sid, mypos.config.checkout.sid);
         let walletNumber = utils.safeVal(params.sid, mypos.config.checkout.clientNumber);
         let orderId = utils.safeVal(params.orderId, uuidv4());
+        let outputFormat = utils.safeVal(params.outputFormat, utils.safeVal(mypos.config.checkout.outputFormat, 'JSON'));
 
         const reverseParams = {
             IPCmethod: 'IPCAuthorizationReverse',
@@ -20,7 +21,7 @@ class CheckoutAuthorizationReverseRequest extends CheckoutApiRequest {
             SID: sid,
             WalletNumber: walletNumber,
             KeyIndex: mypos.config.checkout.keyIndex,
-            // OutputFormat: XML, // XML or JSON
+            OutputFormat: outputFormat
         };
 
         super(mypos, reverseParams);
