@@ -31,8 +31,8 @@ class CheckoutIAPreAuthorizationeRequest extends CheckoutApiRequest {
             // AVV: params.AVV,
             // XID: params.XID,
             CardToken: cardToken,
-            AccountSettlement: params.AccountSettlement,
-            Note: params.note,
+            // AccountSettlement: params.AccountSettlement,
+            // Note: params.note,
             ItemName: params.itemName,
         };
 
