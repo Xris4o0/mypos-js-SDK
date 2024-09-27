@@ -4,7 +4,7 @@ const uuidv4 = require('uuid/v4');
 const utils = require('../../utils/common');
 const CheckoutApiRequest = require('../abstract/checkout-api-request');
 
-class CheckoutIAPurchaseRequest extends CheckoutApiRequest {
+class CheckoutIPCIAStoredCardUpdateRequest extends CheckoutApiRequest {
     constructor(mypos, params) {
         let language = utils.safeVal(params.lang, utils.safeVal(mypos.config.checkout.lang, 'EN'));
         let version = utils.safeVal(params.version, utils.safeVal(mypos.config.checkout.version, '1.4'));
@@ -30,19 +30,10 @@ class CheckoutIAPurchaseRequest extends CheckoutApiRequest {
             OutputFormat: outputFormat
         };
 
-        for (let i = 0; i < params.cartItems.length; i++) {
-            let num = i + 1;
-            purchaseParams[`Article_${num}`] = params.cartItems[i].name;
-            purchaseParams[`Quantity_${num}`] = params.cartItems[i].quantity;
-            purchaseParams[`Price_${num}`] = params.cartItems[i].price;
-            purchaseParams[`Currency_${num}`] = currency;
-            purchaseParams[`Amount_${num}`] = params.cartItems[i].quantity * params.cartItems[i].price;
-        }
-
         super(mypos, purchaseParams);
     }
 }
 
-module.exports = CheckoutIAPurchaseRequest;
+module.exports = CheckoutIPCIAStoredCardUpdateRequest;
 
 // FINISHED
