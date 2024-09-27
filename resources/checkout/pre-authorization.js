@@ -4,7 +4,7 @@ const uuidv4 = require('uuid/v4');
 const utils = require('../../utils/common');
 const CheckoutApiRequest = require('../abstract/checkout-api-request');
 
-class CheckoutIAPurchaseRequest extends CheckoutApiRequest {
+class CheckoutIPCPreAuthorizationRequest extends CheckoutApiRequest {
     constructor(mypos, params) {
         let language = utils.safeVal(params.lang, utils.safeVal(mypos.config.checkout.lang, 'EN'));
         let version = utils.safeVal(params.version, utils.safeVal(mypos.config.checkout.version, '1.4'));
@@ -15,49 +15,29 @@ class CheckoutIAPurchaseRequest extends CheckoutApiRequest {
         let okUrl = utils.safeVal(params.okUrl, mypos.config.checkout.okUrl);
         let cancelUrl = utils.safeVal(params.cancelUrl, mypos.config.checkout.cancelUrl);
         let notifyUrl = utils.safeVal(params.notifyUrl, mypos.config.checkout.notifyUrl);
-        let cardToken = utils.safeVal(params.cardToken, utils.safeVal(mypos.config.checkout.cardToken, 0));
-        let paymentMethod = utils.safeVal(params.paymentMethod, utils.safeVal(mypos.config.checkout.paymentMethod, 1));
-        let paymentParametersRequired = utils.safeVal(params.paymentParametersRequired, utils.safeVal(mypos.config.checkout.paymentParametersRequired, 1));
-
+        
         const purchaseParams = {
             IPCmethod: 'IPCPreAuthorization',
             IPCVersion: version,
             IPCLanguage: language,
-            SID: sid,
-            WalletNumber: walletNumber,
             Amount: params.amount,
             Currency: currency,
             OrderID: orderId,
+            SID: sid,
+            WalletNumber: walletNumber,
+            KeyIndex: mypos.config.checkout.keyIndex,
             URL_OK: okUrl,
             URL_Cancel: cancelUrl,
             URL_Notify: notifyUrl,
-            CardToken: cardToken,
-            KeyIndex: mypos.config.checkout.keyIndex,
-            PaymentParametersRequired: paymentParametersRequired,
-            PaymentMethod: paymentMethod,
-            customeremail: params.customer.email,
-            customerfirstnames: params.customer.firstNames,
-            customerfamilyname: params.customer.familyName,
-            customerphone: params.customer.phone,
-            customercountry: params.customer.country,
-            customercity: params.customer.city,
-            customerzipcode: params.customer.zipCode,
-            customeraddress: params.customer.address,
+            AccountSettlement: params.AccountSettlement,
             Note: params.note,
-            CartItems: params.cartItems.length
+            ItemName: params.ItemName
         };
-
-        for (let i = 0; i < params.cartItems.length; i++) {
-            let num = i + 1;
-            purchaseParams[`Article_${num}`] = params.cartItems[i].name;
-            purchaseParams[`Quantity_${num}`] = params.cartItems[i].quantity;
-            purchaseParams[`Price_${num}`] = params.cartItems[i].price;
-            purchaseParams[`Currency_${num}`] = currency;
-            purchaseParams[`Amount_${num}`] = params.cartItems[i].quantity * params.cartItems[i].price;
-        }
 
         super(mypos, purchaseParams);
     }
 }
 
-module.exports = CheckoutIAPurchaseRequest;
+module.exports = CheckoutIPCPreAuthorizationRequest;
+
+// FINISHED
