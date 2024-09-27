@@ -27,3 +27,5 @@ class CheckoutIPCPreAuthCancellationRequest extends CheckoutApiRequest {
 }
 
 module.exports = CheckoutIPCPreAuthCancellationRequest;
+
+// FINISHED
