@@ -38,3 +38,5 @@ class CheckoutIPCPurchaseNotifyRequest extends CheckoutApiRequest {
 }
 
 module.exports = CheckoutIPCPurchaseNotifyRequest;
+
+// FINISHED
