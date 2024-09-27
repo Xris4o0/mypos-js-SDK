@@ -50,3 +50,5 @@ class CheckoutIPCPurchaseByIcardRequest extends CheckoutApiRequest {
 }
 
 module.exports = CheckoutIPCPurchaseByIcardRequest;
+
+// FINISHED
