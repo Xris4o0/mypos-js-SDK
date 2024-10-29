@@ -36,6 +36,19 @@ app.post('/purchase', (req, res) => {
 app.post('/iapurchase', (req, res) => {
     mypos.checkout.iapurchase(purchaseParams, res);
 });
+app.post('/purchase-by-icard', (req, res) => {
+    mypos.checkout.iapurchase(purchaseParams, res);
+});
+app.post('/purchase-notify', (req, res) => {
+    mypos.checkout.notifyOKParams({ trnRef: req.body.trnRef }, (result) => {
+        res.send(result);
+    });
+});
+app.post('/purchase-ok', (req, res) => {
+    mypos.checkout.notifyOKParams({ trnRef: req.body.trnRef }, (result) => {
+        res.send(result);
+    });
+});
 app.post('/refund', (req, res) => {
     mypos.checkout.refund(refundParams(req.body.trnRef), (result) => {
         res.send(result);
@@ -84,6 +97,14 @@ refundParams = (trnRef) => {
     return {
         orderId: uuidv4(),
         amount: 9.99,
+        trnRef: trnRef
+    };
+};
+
+
+notifyOKParams = (trnRef) => {
+    return {
+        orderId: uuidv4(),
         trnRef: trnRef
     };
 };
