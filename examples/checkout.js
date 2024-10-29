@@ -49,6 +49,9 @@ app.post('/purchase-ok', (req, res) => {
         res.send(result);
     });
 });
+app.post('/purchase-cancel', (req, res) => {
+    mypos.checkout.purchaseCancelParams(purchaseCancelParams, res);
+});
 app.post('/refund', (req, res) => {
     mypos.checkout.refund(refundParams(req.body.trnRef), (result) => {
         res.send(result);
@@ -91,6 +94,11 @@ const purchaseParams = {
         address: 'Kleine Bahnstr. 41'
     },
     note: 'Some note'
+};
+
+const purchaseCancelParams = {
+    orderId: req.body.orderId,
+    amount: req.body.amount
 };
 
 refundParams = (trnRef) => {
