@@ -17,7 +17,7 @@ class CheckoutIPCPurchaseCancelRequest extends CheckoutApiRequest {
             IPCLanguage: language,
             Amount: params.amount,
             Currency: currency,
-            OrderID: params.orderId,
+            OrderID: orderId,
         };
 
         super(mypos, purchaseParams);
