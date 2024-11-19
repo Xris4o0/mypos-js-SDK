@@ -10,16 +10,16 @@
   "author": "myPOS",
   "license": "ISC",
   "dependencies": {
+    "@aave/protocol-v2": "^1.0.1",
     "enum": "^2.5.0",
     "net": "^1.0.2",
+    "node-rsa": "^1.0.6",
     "request": "^2.88.0",
-    "uuid": "^3.3.3",
-    "node-rsa": "^1.0.6"
+    "uuid": "^3.3.3"
   },
   "directories": {
     "example": "examples"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/developermypos/mypos-js.git"
