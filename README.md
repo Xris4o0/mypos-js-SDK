@@ -1,5 +1,3 @@
-
-
 # myPOS SDK NodeJS
 
 This repository provides a native NodeJS SDK, which enables to integrate your solution with myPOS APIs such as Checkout, Transactions, Devices, Webhooks and more to come.
@@ -7,6 +5,7 @@ This repository provides a native NodeJS SDK, which enables to integrate your so
 ### Table of Contents
 
 * [Installation](#installation)
+* [Environment and Key Management](#environment-and-key-management)
 * [Checkout](#checkout)  
   * [Purchase](#purchase)
   * [Refund](#refund)
@@ -38,6 +37,71 @@ This repository provides a native NodeJS SDK, which enables to integrate your so
 
 ### Install via NPM package manager
 ```npm i @mypos-ltd/mypos```
+
+## Environment and Key Management
+
+The SDK supports three environments: `demo`, `sandbox`, and `production`.  
+You can select the environment and provide all credentials and keys via environment variables.
+
+#### **.env Example**
+```env
+MYPOS_ENVIRONMENT=sandbox
+
+# Demo environment
+MYPOS_SID_DEMO=your_demo_sid
+MYPOS_CLIENT_NUMBER_DEMO=your_demo_wallet
+MYPOS_CURRENCY_DEMO=EUR
+MYPOS_KEY_INDEX_DEMO=1
+MYPOS_PRIVATE_KEY_DEMO=...
+
+# Sandbox environment (defaults will be used if not set)
+MYPOS_SID_SANDBOX=000000000000010
+MYPOS_CLIENT_NUMBER_SANDBOX=61938166610
+MYPOS_CURRENCY_SANDBOX=EUR
+MYPOS_KEY_INDEX_SANDBOX=1
+MYPOS_PRIVATE_KEY_SANDBOX=...
+
+# Production environment
+MYPOS_SID_PRODUCTION=your_prod_sid
+MYPOS_CLIENT_NUMBER_PRODUCTION=your_prod_wallet
+MYPOS_CURRENCY_PRODUCTION=EUR
+MYPOS_KEY_INDEX_PRODUCTION=1
+MYPOS_PRIVATE_KEY_PRODUCTION=...
+
+# Common URLs
+MYPOS_OK_URL=http://localhost:8080/ok
+MYPOS_CANCEL_URL=http://localhost:8080/cancel
+MYPOS_NOTIFY_URL=http://localhost:8080/notify
+```
+
+#### **SDK Initialization Example**
+```js
+require('dotenv').config();
+const mypos = require('@mypos-ltd/mypos')({
+  environment: process.env.MYPOS_ENVIRONMENT, // 'demo', 'sandbox', or 'production'
+  checkout: {
+    sid: envConfig.sid,
+    clientNumber: envConfig.clientNumber,
+    currency: envConfig.currency,
+    keyIndex: envConfig.keyIndex,
+    privateKeys: {
+      demo: process.env.MYPOS_PRIVATE_KEY_DEMO,
+      sandbox: process.env.MYPOS_PRIVATE_KEY_SANDBOX,
+      production: process.env.MYPOS_PRIVATE_KEY_PRODUCTION
+    },
+    okUrl: process.env.MYPOS_OK_URL,
+    cancelUrl: process.env.MYPOS_CANCEL_URL,
+    notifyUrl: process.env.MYPOS_NOTIFY_URL,
+    // ...other config...
+  }
+});
+```
+
+#### **Parameter Casing**
+> All API parameters must be in PascalCase (e.g., `OrderID`, `WalletNumber`, `KeyIndex`, `CustomerEmail`, etc.) to comply with myPOS API requirements.
+
+#### **Private Key Management**
+- The SDK will use the private key for the selected environment from `.env` or fall back to `private_key.txt` in the project root.
 
 ## Checkout
 Before calling any of the Checkout API methods, you need to initialize the SDK.

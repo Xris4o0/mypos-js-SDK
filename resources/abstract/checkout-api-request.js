@@ -18,12 +18,26 @@ class CheckoutApiRequest {
     }
 
     get host() {
-        return this.mypos.config.isSandbox ? 'https://www.mypos.eu/vmp/checkout-test' : 'https://www.mypos.eu/vmp/checkout';
+        const env = this.mypos.config.environment;
+        if (env === 'demo') {
+            return 'https://demo.mypos.eu/vmp/checkout';
+        } else if (env === 'sandbox') {
+            return 'https://www.mypos.com/vmp/checkout-test';
+        } else {
+            return 'https://www.mypos.com/vmp/checkout';
+        }
     }
 
     send = (handler) => {
-        const privateKey = new NodeRSA(this.mypos.config.checkout.privateKey);
-        this._params['Signature'] = generateSignature(this.params, privateKey);
+        // Select private key based on environment
+        const env = this.mypos.config.environment;
+        let privateKey = this.mypos.config.checkout.privateKey;
+        if (this.mypos.config.checkout.privateKeys && this.mypos.config.checkout.privateKeys[env]) {
+            privateKey = this.mypos.config.checkout.privateKeys[env];
+        }
+        console.log('Using private key:', privateKey);
+        const rsaKey = new NodeRSA(privateKey);
+        this._params['Signature'] = generateSignature(this.params, rsaKey);
         logger.debug(`Sending request to myPOS Checkout API with params: ${JSON.stringify(this.params)}`);
         const data = generateForm(this.host, this.params);
 
@@ -49,7 +63,11 @@ const generateSignature = (params, privateKey) => {
     let buff = Buffer.from(dataToSign);
     let base64data = buff.toString('base64');
 
-    return privateKey.sign(Buffer.from(base64data), 'base64', 'utf8');
+    // Debug logs for signature troubleshooting
+    console.log('String to sign:', dataToSign);
+    console.log('Base64 to sign:', base64data);
+
+    return privateKey.sign(Buffer.from(base64data), 'base64', 'utf8', 'sha256');
 };
 
 const generateForm = (host, params) => {

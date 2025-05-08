@@ -11,7 +11,13 @@ function MyPOS(config) {
     }
 
     this.token = undefined;
-    this.config = Object.assign(defaultConfig, config);
+    // Support environment selection
+    let environment = config.environment;
+    if (!environment) {
+        // Backward compatibility: map isSandbox
+        environment = config.isSandbox ? 'sandbox' : 'production';
+    }
+    this.config = Object.assign(defaultConfig, config, { environment });
 
     this.setToken = (token) => {
         this.token = token;

@@ -1,7 +1,7 @@
 'use strict';
 
 const net = require('net');
-const uuidv4 = require('uuid/v4');
+const { v4: uuidv4 } = require('uuid');
 const crypto = require('../../../utils/crypto');
 const logger = require('../../../utils/logger');
 

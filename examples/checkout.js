@@ -1,29 +1,79 @@
 const express = require('express')
 const app = express();
-const uuidv4 = require('uuid/v4');
+const { v4: uuidv4 } = require('uuid');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
+require('dotenv').config();
 
-const mypos = require('@mypos-ltd/mypos')({
-    isSandbox: true,
+const environment = process.env.MYPOS_ENVIRONMENT || 'sandbox';
+
+function getPrivateKey(env) {
+  const envVar = {
+    demo: 'MYPOS_PRIVATE_KEY_DEMO',
+    sandbox: 'MYPOS_PRIVATE_KEY_SANDBOX',
+    production: 'MYPOS_PRIVATE_KEY_PRODUCTION'
+  }[env];
+  let key = process.env[envVar];
+  if (!key) {
+    // fallback to private_key.txt
+    key = fs.readFileSync(path.resolve(process.cwd(), 'private_key.txt'), 'utf8');
+  } else {
+    key = key.replace(/\\n/g, '\n');
+  }
+  return key;
+}
+
+function getEnvConfig(env) {
+  if (env === 'sandbox') {
+    return {
+      sid: process.env.MYPOS_SID_SANDBOX || '000000000000010',
+      clientNumber: process.env.MYPOS_CLIENT_NUMBER_SANDBOX || '61938166610',
+      currency: process.env.MYPOS_CURRENCY_SANDBOX || 'EUR',
+      keyIndex: parseInt(process.env.MYPOS_KEY_INDEX_SANDBOX || '1', 10),
+      privateKey: getPrivateKey('sandbox')
+    };
+  } else if (env === 'demo') {
+    return {
+      sid: process.env.MYPOS_SID_DEMO,
+      clientNumber: process.env.MYPOS_CLIENT_NUMBER_DEMO,
+      currency: process.env.MYPOS_CURRENCY_DEMO,
+      keyIndex: parseInt(process.env.MYPOS_KEY_INDEX_DEMO || '1', 10),
+      privateKey: getPrivateKey('demo')
+    };
+  } else {
+    return {
+      sid: process.env.MYPOS_SID_PRODUCTION,
+      clientNumber: process.env.MYPOS_CLIENT_NUMBER_PRODUCTION,
+      currency: process.env.MYPOS_CURRENCY_PRODUCTION,
+      keyIndex: parseInt(process.env.MYPOS_KEY_INDEX_PRODUCTION || '1', 10),
+      privateKey: getPrivateKey('production')
+    };
+  }
+}
+
+const envConfig = getEnvConfig(environment);
+
+const mypos = require('../mypos')({
+    environment,
     logLevel: 'debug',
     checkout: {
-        sid: '',
+        sid: envConfig.sid,
         lang: 'EN',
-        currency: '',
-        clientNumber: '',
-        okUrl: '',
-        cancelUrl: '',
-        notifyUrl: '',
+        currency: envConfig.currency,
+        clientNumber: envConfig.clientNumber,
+        okUrl: process.env.MYPOS_OK_URL,
+        cancelUrl: process.env.MYPOS_CANCEL_URL,
+        notifyUrl: process.env.MYPOS_NOTIFY_URL,
         cardTokenRequest: 0,
         paymentMethod: 1,
         paymentParametersRequired: 3,
-        keyIndex: 1,
-        privateKey: '-----BEGIN RSA PRIVATE KEY-----\n' +
-            '...\n' +
-            '...\n' +
-            '...\n' +
-            '-----END RSA PRIVATE KEY-----'
+        keyIndex: envConfig.keyIndex,
+        privateKeys: {
+          demo: getPrivateKey('demo'),
+          sandbox: getPrivateKey('sandbox'),
+          production: getPrivateKey('production')
+        }
     }
 });
 

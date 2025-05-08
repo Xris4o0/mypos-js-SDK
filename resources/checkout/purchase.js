@@ -1,6 +1,6 @@
 'use strict';
 
-const uuidv4 = require('uuid/v4');
+const { v4: uuidv4 } = require('uuid');
 const utils = require('../../utils/common');
 const CheckoutApiRequest = require('../abstract/checkout-api-request');
 
@@ -35,14 +35,14 @@ class CheckoutPurchaseRequest extends CheckoutApiRequest {
             KeyIndex: mypos.config.checkout.keyIndex,
             PaymentParametersRequired: paymentParametersRequired,
             PaymentMethod: paymentMethod,
-            customeremail: params.customer.email,
-            customerfirstnames: params.customer.firstNames,
-            customerfamilyname: params.customer.familyName,
-            customerphone: params.customer.phone,
-            customercountry: params.customer.country,
-            customercity: params.customer.city,
-            customerzipcode: params.customer.zipCode,
-            customeraddress: params.customer.address,
+            CustomerEmail: params.customer.email,
+            CustomerFirstNames: params.customer.firstNames,
+            CustomerFamilyName: params.customer.familyName,
+            CustomerPhone: params.customer.phone,
+            CustomerCountry: params.customer.country,
+            CustomerCity: params.customer.city,
+            CustomerZIPCode: params.customer.zipCode,
+            CustomerAddress: params.customer.address,
             Note: params.note,
             CartItems: params.cartItems.length
         };
@@ -55,6 +55,9 @@ class CheckoutPurchaseRequest extends CheckoutApiRequest {
             purchaseParams[`Currency_${num}`] = currency;
             purchaseParams[`Amount_${num}`] = params.cartItems[i].quantity * params.cartItems[i].price;
         }
+
+        // Debug log for final POST data
+        console.log('Final POST data:', JSON.stringify(purchaseParams, null, 2));
 
         super(mypos, purchaseParams);
     }

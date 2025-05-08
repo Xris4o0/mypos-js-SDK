@@ -64,118 +64,90 @@ const DeleteWebHookSubscriptionsRequest = require('./resources/webHooks/subscrip
 
 module.exports = (mypos) => {
     mypos.checkout = {
-        authorizationCapture: (params, response) => {
-            new CheckoutAuthorizationCaptureRequest(mypos, params).send(response);
+        authorization: (params, callback) => {
+            new CheckoutAuthorizationRequest(mypos, params).send(callback);
         },
-        
-        authorizationList: (params, response) => {
-            new CheckoutAuthorizationListRequest(mypos, params).send(response);
+        authorizationCapture: (params, callback) => {
+            new CheckoutAuthorizationCaptureRequest(mypos, params).send(callback);
         },
-        
-        authorizationReverse: (params, response) => {
-            new CheckoutAuthorizationReverseRequest(mypos, params).send(response);
+        authorizationList: (params, callback) => {
+            new CheckoutAuthorizationListRequest(mypos, params).send(callback);
         },
-        
-        authorization: (params, response) => {
-            new CheckoutAuthorizationRequest(mypos, params).send(response);
+        authorizationReverse: (params, callback) => {
+            new CheckoutAuthorizationReverseRequest(mypos, params).send(callback);
         },
-
         getPaymentStatus: (params, callback) => {
             new CheckoutGetPaymentStatusRequest(mypos, params).send(callback);
         },
-
-        iaPreAuthorization: (params, response) => {
-            new CheckoutIAPreAuthorizationRequest(mypos, params).send(response);
+        iaPreAuthorization: (params, callback) => {
+            new CheckoutIAPreAuthorizationRequest(mypos, params).send(callback);
         },
-
-        iaPurchase: (params, response) => {
-            new CheckoutIAPurchaseRequest(mypos, params).send(response);
+        iaPurchase: (params, callback) => {
+            new CheckoutIAPurchaseRequest(mypos, params).send(callback);
         },
-
-        iaStoreCardUpdate: (params, response) => {
-            new CheckoutIAStoreCardUpdateRequest(mypos, params).send(response);
+        iaStoreCard: (params, callback) => {
+            new CheckoutIAStoreCardRequest(mypos, params).send(callback);
         },
-
-        iaStoreCard: (params, response) => {
-            new CheckoutIAStoreCardRequest(mypos, params).send(response);
+        iaStoreCardUpdate: (params, callback) => {
+            new CheckoutIAStoreCardUpdateRequest(mypos, params).send(callback);
         },
-
-        mandateManagment: (params, response) => {
-            new CheckoutMandateManagmentRequest(mypos, params).send(response);
+        mandateManagement: (params, callback) => {
+            new CheckoutMandateManagmentRequest(mypos, params).send(callback);
         },
-
-        paymentSessionCreate: (params, response) => {
-            new CheckoutPaymentSessionCreateRequest(mypos, params).send(response);
+        paymentSessionCreate: (params, callback) => {
+            new CheckoutPaymentSessionCreateRequest(mypos, params).send(callback);
         },
-
-        preAuthCancellation: (params, response) => {
-            new CheckoutPreAuthCancellationRequest(mypos, params).send(response);
+        preAuthCancellation: (params, callback) => {
+            new CheckoutPreAuthCancellationRequest(mypos, params).send(callback);
         },
-
-        preAuthCompletion: (params, response) => {
-            new CheckoutPreAuthCompletionRequest(mypos, params).send(response);
+        preAuthCompletion: (params, callback) => {
+            new CheckoutPreAuthCompletionRequest(mypos, params).send(callback);
         },
-
-        preAuthStatus: (params, response) => {
-            new CheckoutPreAuthStatusRequest(mypos, params).send(response);
+        preAuthStatus: (params, callback) => {
+            new CheckoutPreAuthStatusRequest(mypos, params).send(callback);
         },
-        
-        preAuthorizationCancel: (params, response) => {
-            new CheckoutPreAuthorizationCancelRequest(mypos, params).send(response);
+        preAuthorization: (params, callback) => {
+            new CheckoutPreAuthorizationRequest(mypos, params).send(callback);
         },
-        
-        preAuthorizationNotify: (params, response) => {
-            new CheckoutPreAuthorizationNotifyRequest(mypos, params).send(response);
+        preAuthorizationCancel: (params, callback) => {
+            new CheckoutPreAuthorizationCancelRequest(mypos, params).send(callback);
         },
-        
-        preAuthorizationOK: (params, response) => {
-            new CheckoutPreAuthorizationOKRequest(mypos, params).send(response);
+        preAuthorizationNotify: (params, callback) => {
+            new CheckoutPreAuthorizationNotifyRequest(mypos, params).send(callback);
         },
-        
-        preAuthorization: (params, response) => {
-            new CheckoutPreAuthorizationRequest(mypos, params).send(response);
+        preAuthorizationOK: (params, callback) => {
+            new CheckoutPreAuthorizationOKRequest(mypos, params).send(callback);
         },
-        
-        purchaseByIcard: (params, response) => {
-            new CheckoutPurchaseByIcardRequest(mypos, params).send(response);
+        purchase: (params, callback) => {
+            new CheckoutPurchaseRequest(mypos, params).send(callback);
         },
-        
-        purchaseCancel: (params, response) => {
-            new CheckoutPurchaseCancelRequest(mypos, params).send(response);
+        purchaseByIcard: (params, callback) => {
+            new CheckoutPurchaseByIcardRequest(mypos, params).send(callback);
         },
-
-        preAuthorization: (params, response) => {
-            new CheckoutPurchaseNotifyRequest(mypos, params).send(response);
+        purchaseCancel: (params, callback) => {
+            new CheckoutPurchaseCancelRequest(mypos, params).send(callback);
         },
-
-        purchaseOK: (params, response) => {
-            new CheckoutPurchaseOKRequest(mypos, params).send(response);
+        purchaseNotify: (params, callback) => {
+            new CheckoutPurchaseNotifyRequest(mypos, params).send(callback);
         },
-
-        purchaseRollback: (params, response) => {
-            new CheckoutPurchaseRollbackRequest(mypos, params).send(response);
+        purchaseOK: (params, callback) => {
+            new CheckoutPurchaseOKRequest(mypos, params).send(callback);
         },
-
-        purchase: (params, response) => {
-            new CheckoutPurchaseRequest(mypos, params).send(response);
+        purchaseRollback: (params, callback) => {
+            new CheckoutPurchaseRollbackRequest(mypos, params).send(callback);
         },
-
         refund: (params, callback) => {
             new CheckoutRefundRequest(mypos, params).send(callback);
         },
-
         requestMoney: (params, callback) => {
             new CheckoutRequestMoneyRequest(mypos, params).send(callback);
         },
-
         reversal: (params, callback) => {
             new CheckoutReversalRequest(mypos, params).send(callback);
         },
-
         sendMoney: (params, callback) => {
             new CheckoutSendMoneyRequest(mypos, params).send(callback);
         },
-
     };
 
     mypos.devices = {
