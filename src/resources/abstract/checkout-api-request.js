@@ -35,7 +35,10 @@ class CheckoutApiRequest {
         if (this.mypos.config.checkout.privateKeys && this.mypos.config.checkout.privateKeys[env]) {
             privateKey = this.mypos.config.checkout.privateKeys[env];
         }
-        console.log('Using private key:', privateKey);
+        
+        // DEBUG LOG
+        //console.log('Using private key:', privateKey);
+        
         const rsaKey = new NodeRSA(privateKey);
         this._params['Signature'] = generateSignature(this.params, rsaKey);
         logger.debug(`Sending request to myPOS Checkout API with params: ${JSON.stringify(this.params)}`);
@@ -64,8 +67,8 @@ const generateSignature = (params, privateKey) => {
     let base64data = buff.toString('base64');
 
     // Debug logs for signature troubleshooting
-    console.log('String to sign:', dataToSign);
-    console.log('Base64 to sign:', base64data);
+    //console.log('String to sign:', dataToSign);
+    //console.log('Base64 to sign:', base64data);
 
     return privateKey.sign(Buffer.from(base64data), 'base64', 'utf8', 'sha256');
 };

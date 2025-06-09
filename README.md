@@ -2,6 +2,43 @@
 
 This repository provides a native NodeJS SDK, which enables to integrate your solution with myPOS APIs such as Checkout, Transactions, Devices, Webhooks and more to come.
 
+## Quick Start: User-Friendly SDK Interface
+
+```js
+// Load config from .env or mypos.config.js automatically!
+const { purchase, refund, sendMoney, getPaymentStatus } = require('@mypos-ltd/mypos');
+
+// Example: Purchase (redirect-based checkout)
+const { redirectUrl } = await purchase({
+  cart: [
+    { name: 'T-shirt', price: 50, quantity: 1 },
+    { name: 'Hat', price: 30, quantity: 2 }
+  ],
+  tip: 10, // Optional
+  currency: 'EUR',
+  customer: {
+    email: 'name@website.com',
+    firstNames: 'John',
+    familyName: 'Smith'
+  },
+  note: 'Some note'
+});
+// Redirect the user to redirectUrl
+
+// Example: Refund
+await refund({ transactionId: '...', amount: 50 });
+
+// Example: Send Money
+await sendMoney({ recipient: '...', amount: 100 });
+
+// Example: Get Payment Status
+await getPaymentStatus({ transactionId: '...' });
+```
+
+> **Note:** All config (API key, URLs, etc.) can be set in `.env` or `mypos.config.js`. You can also override any config per call by passing it as a parameter.
+
+---
+
 ### Table of Contents
 
 * [Installation](#installation)

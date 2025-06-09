@@ -57,7 +57,7 @@ class CheckoutPurchaseRequest extends CheckoutApiRequest {
         }
 
         // Debug log for final POST data
-        console.log('Final POST data:', JSON.stringify(purchaseParams, null, 2));
+        //console.log('Final POST data:', JSON.stringify(purchaseParams, null, 2));
 
         super(mypos, purchaseParams);
     }

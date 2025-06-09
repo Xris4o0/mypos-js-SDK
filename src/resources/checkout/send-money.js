@@ -15,7 +15,7 @@ class CheckoutIPCSendMoneyRequest extends CheckoutApiRequest {
             IPCmethod: 'IPCSendMoney',
             IPCVersion: version,
             IPCLanguage: language,
-            CustomerWalletNumber: params.customer.walletNumber,
+            CustomerWalletNumber: params.walletNumber,
             Amount: params.amount,
             Currency: currency,
             TransactionReference: params.TransactionReference,

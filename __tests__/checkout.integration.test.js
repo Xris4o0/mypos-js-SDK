@@ -21,8 +21,11 @@ describe('Integration: mypos.checkout.purchase (real server)', () => {
       // If using \\n in env, convert to real newlines
       privateKey = privateKey.replace(/\\n/g, '\n');
     }
-    console.log('Loaded private key:', JSON.stringify(privateKey));
-    console.log('Private key length:', privateKey.length);
+
+    // DEBUG LOG
+    //console.log('Loaded private key:', JSON.stringify(privateKey));
+    //console.log('Private key length:', privateKey.length);
+    
     mypos = MyPOS({
       isSandbox: true,
       checkout: {
