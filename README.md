@@ -75,6 +75,9 @@ await getPaymentStatus({ transactionId: '...' });
 ### Install via NPM package manager
 ```npm i @mypos-ltd/mypos```
 
+### Local Installation via NPM package
+```npm install ../mypos-ltd-mypos-1.0.0.tgz```
+
 ## Environment and Key Management
 
 The SDK supports three environments: `demo`, `sandbox`, and `production`.  
