@@ -5,3 +5,5 @@ package-lock.json
 .env
 public_certificate.txt
 private_key.txt
+*.pem
+builds/*.tgz

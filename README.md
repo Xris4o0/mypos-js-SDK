@@ -1,425 +1,529 @@
 # myPOS SDK NodeJS
 
-This repository provides a native NodeJS SDK, which enables to integrate your solution with myPOS APIs such as Checkout, Transactions, Devices, Webhooks and more to come.
+A user-friendly NodeJS SDK for myPOS Checkout API with support for all payment operations including purchase, refund, pre-authorization, and more.
 
-## Quick Start: User-Friendly SDK Interface
+## 🚀 Quick Start
 
-```js
-// Load config from .env or mypos.config.js automatically!
-const { purchase, refund, sendMoney, getPaymentStatus } = require('@mypos-ltd/mypos');
+### Installation
 
-// Example: Purchase (redirect-based checkout)
+```bash
+npm install @mypos/JS-checkout-SDK
+```
+
+### Basic Usage
+
+```javascript
+const { purchase, refund, reversal, getPaymentStatus } = require('@mypos/JS-checkout-SDK');
+
+// Simple purchase with cart
 const { redirectUrl } = await purchase({
   cart: [
     { name: 'T-shirt', price: 50, quantity: 1 },
     { name: 'Hat', price: 30, quantity: 2 }
   ],
-  tip: 10, // Optional
-  currency: 'EUR',
-  customer: {
-    email: 'name@website.com',
-    firstNames: 'John',
-    familyName: 'Smith'
-  },
-  note: 'Some note'
+  customer: { email: 'user@example.com' }
 });
+
 // Redirect the user to redirectUrl
 
-// Example: Refund
-await refund({ transactionId: '...', amount: 50 });
+// Refund a transaction
+await refund({ 
+  transactionId: 'TXN123', 
+  amount: 50 
+});
 
-// Example: Send Money
-await sendMoney({ recipient: '...', amount: 100 });
-
-// Example: Get Payment Status
-await getPaymentStatus({ transactionId: '...' });
+// Check payment status
+const status = await getPaymentStatus({ 
+  transactionId: 'TXN123' 
+});
 ```
 
-> **Note:** All config (API key, URLs, etc.) can be set in `.env` or `mypos.config.js`. You can also override any config per call by passing it as a parameter.
+### 🎮 Interactive Demo
 
----
+Try all 28 checkout functions with our interactive demo:
 
-### Table of Contents
+```bash
+npm run demo
+```
 
-* [Installation](#installation)
-* [Environment and Key Management](#environment-and-key-management)
-* [Checkout](#checkout)  
-  * [Purchase](#purchase)
-  * [Refund](#refund)
-  * [Reversal](#reversal)
-  * [Check Payment Status](#check-payment-status)
-* [Transactions](#transactions)
-  * [List Transactions](#list-transactions)
-  * [Get Transaction Details](#get-transaction-details)
-* [Devices](#devices)
-  * [List Devices](#list-devices)
-  * [Get Device Details](#get-device-details)
-  * [List Device Transactions](#list-device-transactions)
-  * [List All Devices Transactions](#list-all-devices-transactions)
-* [Webhooks](#webhooks)
-  * [List Webhooks](#list-webhooks)
-  * [Get Webhook Details](#get-webhook-details)
-  * [Create a Webhook](#create-a-webhook)
-  * [Update a Webhook](#update-a-webhook)
-  * [Delete a Webhook](#delete-a-webhook)
-  * [List Webhook Events](#list-webhook-events)
-  * [Subscribe for an event](#subscribe-for-an-event)
-  * [List Event Subscriptions](#list-event-subscriptions)
-  * [Get Event Subscription Details](#get-event-subscription-details)
-  * [Unsubscribe from an Event](#unsubscribe-from-an-event)
-  
-  
-  
-## Installation
+This opens a web interface at `http://localhost:3000` where you can:
+- Test all checkout functions with pre-filled examples
+- See real-time responses
+- Copy code examples
+- Configure different environments
 
-### Install via NPM package manager
-```npm i @mypos-ltd/mypos```
+## 📋 Table of Contents
 
-### Local Installation via NPM package
-```npm install ../mypos-ltd-mypos-1.0.0.tgz```
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [API Reference](#api-reference)
+  - [Basic Operations](#basic-operations)
+  - [Money Transfer](#money-transfer)
+  - [Authorization](#authorization)
+  - [Pre-Authorization](#pre-authorization)
+  - [iCard Operations](#icard-operations)
+  - [Advanced Operations](#advanced-operations)
+  - [Callback Handlers](#callback-handlers)
+- [Legacy API](#legacy-api)
+- [Configuration](#configuration)
+- [Troubleshooting](#troubleshooting)
 
-## Environment and Key Management
+## ⚙️ Configuration
 
-The SDK supports three environments: `demo`, `sandbox`, and `production`.  
-You can select the environment and provide all credentials and keys via environment variables.
+### Environment Variables (.env)
 
-#### **.env Example**
+Copy `example.env.txt` to `.env` and configure:
+
 ```env
 MYPOS_ENVIRONMENT=sandbox
-
-# Demo environment
-MYPOS_SID_DEMO=your_demo_sid
-MYPOS_CLIENT_NUMBER_DEMO=your_demo_wallet
-MYPOS_CURRENCY_DEMO=EUR
-MYPOS_KEY_INDEX_DEMO=1
-MYPOS_PRIVATE_KEY_DEMO=...
-
-# Sandbox environment (defaults will be used if not set)
 MYPOS_SID_SANDBOX=000000000000010
 MYPOS_CLIENT_NUMBER_SANDBOX=61938166610
-MYPOS_CURRENCY_SANDBOX=EUR
-MYPOS_KEY_INDEX_SANDBOX=1
-MYPOS_PRIVATE_KEY_SANDBOX=...
-
-# Production environment
-MYPOS_SID_PRODUCTION=your_prod_sid
-MYPOS_CLIENT_NUMBER_PRODUCTION=your_prod_wallet
-MYPOS_CURRENCY_PRODUCTION=EUR
-MYPOS_KEY_INDEX_PRODUCTION=1
-MYPOS_PRIVATE_KEY_PRODUCTION=...
-
-# Common URLs
-MYPOS_OK_URL=http://localhost:8080/ok
-MYPOS_CANCEL_URL=http://localhost:8080/cancel
-MYPOS_NOTIFY_URL=http://localhost:8080/notify
+MYPOS_PRIVATE_KEY_SANDBOX=-----BEGIN RSA PRIVATE KEY-----...
+MYPOS_OK_URL=http://localhost:3000/success
+MYPOS_CANCEL_URL=http://localhost:3000/cancel
+MYPOS_NOTIFY_URL=http://localhost:3000/notify
 ```
 
-#### **SDK Initialization Example**
-```js
-require('dotenv').config();
-const mypos = require('@mypos-ltd/mypos')({
-  environment: process.env.MYPOS_ENVIRONMENT, // 'demo', 'sandbox', or 'production'
+### Private Key Files (.pem)
+
+Alternatively, use `.pem` files:
+
+```
+private_key.pem                    # Default for all environments
+private_key_sandbox.pem           # Sandbox-specific
+private_key_demo.pem              # Demo-specific
+private_key_production.pem        # Production-specific
+```
+
+### Configuration File (mypos.config.js)
+
+```javascript
+module.exports = {
+  environment: 'sandbox',
   checkout: {
-    sid: envConfig.sid,
-    clientNumber: envConfig.clientNumber,
-    currency: envConfig.currency,
-    keyIndex: envConfig.keyIndex,
-    privateKeys: {
-      demo: process.env.MYPOS_PRIVATE_KEY_DEMO,
-      sandbox: process.env.MYPOS_PRIVATE_KEY_SANDBOX,
-      production: process.env.MYPOS_PRIVATE_KEY_PRODUCTION
-    },
-    okUrl: process.env.MYPOS_OK_URL,
-    cancelUrl: process.env.MYPOS_CANCEL_URL,
-    notifyUrl: process.env.MYPOS_NOTIFY_URL,
-    // ...other config...
+    sid: '000000000000010',
+    clientNumber: '61938166610',
+    currency: 'EUR',
+    privateKey: '-----BEGIN RSA PRIVATE KEY-----...',
+    successUrl: 'http://localhost:3000/success',
+    cancelUrl: 'http://localhost:3000/cancel',
+    notifyUrl: 'http://localhost:3000/notify'
+  }
+};
+```
+
+## 📚 API Reference
+
+### Basic Operations
+
+#### Purchase
+Create a payment with cart items.
+
+```javascript
+const { purchase } = require('@mypos/JS-checkout-SDK');
+
+const result = await purchase({
+  cart: [
+    { name: 'Product', price: 50, quantity: 1 }
+  ],
+  customer: { 
+    email: 'user@example.com',
+    firstNames: 'John',
+    familyName: 'Doe'
+  },
+  currency: 'EUR',
+  note: 'Order #123'
+});
+
+// result contains:
+// {
+//   redirectUrl: 'https://www.mypos.com/vmp/checkout',
+//   rawResponse: '<html><body onload="document.ipcForm.submit()">...'
+// }
+```
+
+**Handling the Payment Redirect:**
+
+The purchase function returns an auto-submitting HTML form. You have 3 options:
+
+1. **Render the HTML directly** (recommended for server-side):
+```javascript
+app.post('/checkout', async (req, res) => {
+  const result = await purchase({ cart: [...], customer: {...} });
+  res.send(result.rawResponse); // Browser will auto-submit to myPOS
+});
+```
+
+2. **Redirect to the URL**:
+```javascript
+const result = await purchase({ cart: [...], customer: {...} });
+// Use the redirectUrl with the form data
+// (Note: You still need to POST the form data)
+```
+
+3. **Open in new window** (client-side):
+```javascript
+const newWindow = window.open('', '_blank');
+newWindow.document.write(result.rawResponse);
+newWindow.document.close();
+```
+
+#### Refund
+Refund a completed transaction.
+
+```javascript
+const { refund } = require('@mypos-ltd/mypos');
+
+const result = await refund({
+  transactionId: 'TXN123',
+  amount: 25.50,
+  currency: 'EUR',
+  note: 'Partial refund'
+});
+```
+
+#### Reversal
+Reverse a transaction.
+
+```javascript
+const { reversal } = require('@mypos-ltd/mypos');
+
+const result = await reversal({
+  transactionId: 'TXN123',
+  note: 'Transaction reversal'
+});
+```
+
+#### Get Payment Status
+Check the status of a payment.
+
+```javascript
+const { getPaymentStatus } = require('@mypos-ltd/mypos');
+
+const status = await getPaymentStatus({
+  transactionId: 'TXN123'
+});
+```
+
+### Money Transfer
+
+#### Send Money
+Send money to another wallet.
+
+```javascript
+const { sendMoney } = require('@mypos-ltd/mypos');
+
+const result = await sendMoney({
+  walletNumber: '61938166610',
+  amount: 100,
+  currency: 'EUR',
+  note: 'Payment for services'
+});
+```
+
+#### Request Money
+Request money from another wallet.
+
+```javascript
+const { requestMoney } = require('@mypos-ltd/mypos');
+
+const result = await requestMoney({
+  walletNumber: '61938166610',
+  amount: 100,
+  currency: 'EUR',
+  note: 'Invoice payment'
+});
+```
+
+### Authorization
+
+#### Authorization
+Create an authorization.
+
+```javascript
+const { authorization } = require('@mypos-ltd/mypos');
+
+const result = await authorization({
+  amount: 50,
+  currency: 'EUR',
+  note: 'Authorization for future capture'
+});
+```
+
+#### Authorization Capture
+Capture an authorization.
+
+```javascript
+const { authorizationCapture } = require('@mypos-ltd/mypos');
+
+const result = await authorizationCapture({
+  transactionId: 'AUTH123',
+  amount: 50,
+  currency: 'EUR',
+  note: 'Capture authorization'
+});
+```
+
+#### Authorization List
+List authorizations.
+
+```javascript
+const { authorizationList } = require('@mypos-ltd/mypos');
+
+const result = await authorizationList({
+  note: 'List all authorizations'
+});
+```
+
+#### Authorization Reverse
+Reverse an authorization.
+
+```javascript
+const { authorizationReverse } = require('@mypos-ltd/mypos');
+
+const result = await authorizationReverse({
+  transactionId: 'AUTH123',
+  note: 'Reverse authorization'
+});
+```
+
+### Pre-Authorization
+
+#### Pre-Authorization
+Create a pre-authorization.
+
+```javascript
+const { preAuthorization } = require('@mypos-ltd/mypos');
+
+const result = await preAuthorization({
+  cart: [
+    { name: 'Product', price: 50, quantity: 1 }
+  ],
+  customer: { email: 'user@example.com' },
+  currency: 'EUR',
+  note: 'Pre-authorize payment'
+});
+```
+
+#### Pre-Auth Status
+Check pre-authorization status.
+
+```javascript
+const { preAuthStatus } = require('@mypos-ltd/mypos');
+
+const result = await preAuthStatus({
+  transactionId: 'PREAUTH123'
+});
+```
+
+#### Pre-Auth Completion
+Complete a pre-authorization.
+
+```javascript
+const { preAuthCompletion } = require('@mypos-ltd/mypos');
+
+const result = await preAuthCompletion({
+  transactionId: 'PREAUTH123',
+  amount: 50,
+  currency: 'EUR',
+  note: 'Complete pre-auth'
+});
+```
+
+#### Pre-Auth Cancellation
+Cancel a pre-authorization.
+
+```javascript
+const { preAuthCancellation } = require('@mypos-ltd/mypos');
+
+const result = await preAuthCancellation({
+  transactionId: 'PREAUTH123',
+  note: 'Cancel pre-auth'
+});
+```
+
+### iCard Operations
+
+#### IA Purchase
+Purchase with iCard.
+
+```javascript
+const { iaPurchase } = require('@mypos-ltd/mypos');
+
+const result = await iaPurchase({
+  cart: [
+    { name: 'Product', price: 50, quantity: 1 }
+  ],
+  customer: { email: 'user@example.com' },
+  currency: 'EUR',
+  note: 'iCard purchase'
+});
+```
+
+#### IA Store Card
+Store a card for future use.
+
+```javascript
+const { iaStoreCard } = require('@mypos-ltd/mypos');
+
+const result = await iaStoreCard({
+  customer: { email: 'user@example.com' },
+  currency: 'EUR',
+  note: 'Store card for future use'
+});
+```
+
+#### IA Store Card Update
+Update stored card.
+
+```javascript
+const { iaStoreCardUpdate } = require('@mypos-ltd/mypos');
+
+const result = await iaStoreCardUpdate({
+  cardId: 'CARD123',
+  customer: { email: 'user@example.com' },
+  currency: 'EUR',
+  note: 'Update stored card'
+});
+```
+
+#### Purchase by iCard
+Purchase using stored iCard.
+
+```javascript
+const { purchaseByIcard } = require('@mypos-ltd/mypos');
+
+const result = await purchaseByIcard({
+  cart: [
+    { name: 'Product', price: 50, quantity: 1 }
+  ],
+  customer: { email: 'user@example.com' },
+  currency: 'EUR',
+  note: 'Purchase with stored iCard'
+});
+```
+
+### Advanced Operations
+
+#### Payment Session Create
+Create a payment session.
+
+```javascript
+const { paymentSessionCreate } = require('@mypos-ltd/mypos');
+
+const result = await paymentSessionCreate({
+  cart: [
+    { name: 'Product', price: 50, quantity: 1 }
+  ],
+  customer: { email: 'user@example.com' },
+  currency: 'EUR',
+  note: 'Create payment session'
+});
+```
+
+#### Mandate Management
+Manage payment mandates.
+
+```javascript
+const { mandateManagment } = require('@mypos-ltd/mypos');
+
+const result = await mandateManagment({
+  mandateId: 'MANDATE123',
+  note: 'Manage mandate'
+});
+```
+
+### Callback Handlers
+
+These functions handle callbacks from myPOS:
+
+- `purchaseOK` - Handle successful purchase
+- `purchaseCancel` - Handle cancelled purchase  
+- `purchaseNotify` - Handle purchase notification
+- `purchaseRollback` - Rollback a purchase
+- `preAuthorizationOK` - Handle pre-auth success
+- `preAuthorizationNotify` - Handle pre-auth notification
+- `preAuthorizationCancel` - Handle pre-auth cancellation
+
+## 🔄 Legacy API
+
+The SDK also supports the legacy callback-based API:
+
+```javascript
+const mypos = require('@mypos-ltd/mypos')({
+  environment: 'sandbox',
+  checkout: {
+    sid: '000000000000010',
+    clientNumber: '61938166610',
+    currency: 'EUR',
+    privateKey: '-----BEGIN RSA PRIVATE KEY-----...',
+    successUrl: 'http://localhost:3000/success',
+    cancelUrl: 'http://localhost:3000/cancel',
+    notifyUrl: 'http://localhost:3000/notify'
   }
 });
+
+// Checkout operations
+mypos.checkout.purchase(params, (response) => {
+  console.log(response);
+});
+
+// Future: Other operations (coming soon)
+mypos.transactions.list(params, callback);
+mypos.devices.list(params, callback);
+mypos.webhooks.list(params, callback);
 ```
 
-#### **Parameter Casing**
-> All API parameters must be in PascalCase (e.g., `OrderID`, `WalletNumber`, `KeyIndex`, `CustomerEmail`, etc.) to comply with myPOS API requirements.
+## 🛠️ Development
 
-#### **Private Key Management**
-- The SDK will use the private key for the selected environment from `.env` or fall back to `private_key.txt` in the project root.
+### Running Tests
 
-## Checkout
-Before calling any of the Checkout API methods, you need to initialize the SDK.
-```javascript
-const mypos = require('@mypos-ltd/mypos')({
-    isSandbox: true,
-    logLevel: 'debug',                  // Logging level
-    checkout: {                         // Checkout API specific configuration
-        sid: '',                        // Stored ID
-        lang: 'EN',                     // Preferred language
-        currency: '',                   // Store currency 
-        clientNumber: '',               // Available in the myPOS Account
-        okUrl: '',                      // Redirect URL on successful operation
-        cancelUrl: '',                  // Redirect URL on cancelled operation
-        notifyUtr: '',                  // Callback URL to be notified on operation result
-        cardTokenRequest: 0,            // View details at https://developers.mypos.eu/en/doc/online_payments/v1_4/21-purchase-with-payment-card-(api-call--ipcpurchase) 
-        paymentMethod: 1,               // View details at https://developers.mypos.eu/en/doc/online_payments/v1_4/21-purchase-with-payment-card-(api-call--ipcpurchase)
-        paymentParametersRequired: 3,   // https://developers.mypos.eu/en/doc/online_payments/v1_4/21-purchase-with-payment-card-(api-call--ipcpurchase)
-        keyIndex: 1,                    // Key index for the particular store
-        privateKey: '-----BEGIN RSA PRIVATE KEY-----\n' + // The private key for the particular store in PEM format
-            '...\n' +
-            '...\n' +
-            '...\n' +
-            '-----END RSA PRIVATE KEY-----'
-    }
-});
-```
-### Purchase
-#### Gathering purchase data.
-```javascript
-const purchaseParams = {
-    orderId: uuidv4(), // A unique reference
-    amount: 23.45,
-    cartItems: [
-        {
-            name: 'HP ProBook 6360b sticker',
-            quantity: 2,
-            price: 10.00
-        },
-        {
-            name: 'Delivery',
-            quantity: 1,
-            price: 3.45
-        }
-    ], 
-    customer: {
-        email: 'name@website.com',
-        firstNames: 'John',
-        familyName: 'Smith',
-        phone: '+23568956958',
-        country: 'DEU',
-        city: 'Hamburg',
-        zipCode: '20095',
-        address: 'Kleine Bahnstr. 41'
-    },
-    note: 'Some note'
-};
-```
-_Note: The customer object can contain only the customer's **email** and **names** (first and family), however the rest of the information can be required during Checkout._
-#### Calling the "Purchase" method.
-Now that you have collected the purchase data, call the "purchase" method from the SDK and provide the purchase parameters and the response object. MyPOS will handle the redirect to the Online Checkout page after validating the provided parameters.
-```javascript
-app.post('/purchase', (req, res) => {
-    mypos.checkout.purchase(purchaseParams, res);
-});
-```
-### Refund
-#### Gathering refund data.
-```javascript
-const refundParams = {
-    orderId: uuidv4(), // A unique reference
-    amount: 9.99,
-    trnRef: "MyTransactionReference"
-};
-```
-#### Calling the "Refund" method.
-Now that you have collected the refund data, call the "refund" method from the SDK and provide the refund parameters.
-```javascript
-app.post('/refund', (req, res) => {
-    mypos.checkout.refund(refundParams, (result) => {
-        res.send(result);
-    });
-});
-```
-### Reversal
-#### Gathering reversal data.
-```javascript
-const reversalParams = {
-    trnRef: "MyTransactionReference"
-};
-```
-#### Calling the "Reversal" method.
-Now that you have collected the reversal data, call the "reversal" method from the SDK and provide the reversal parameters.
-```javascript
-app.post('/reversal', (req, res) => {
-    mypos.checkout.reversal(reversalParams, (result) => {
-        res.send(result);
-    });
-});
-```
-### Check Payment Status
-In order to check the status of a payment, you need to provide myPOS with the order ID.
-#### Gathering payment data.
-```javascript
-const paymentParams = {
-    orderId: "MyOrderID"
-};
-```
-#### Calling the "Get Payment Status" method.
-Now that you have collected the request data, call the "getPaymentStatus" method from the SDK and provide the required parameters.
-```javascript
-app.post('/getPaymentStatus', (req, res) => {
-    mypos.checkout.getPaymentStatus(paymentParams, (result) => {
-        res.send(result);
-    });
-});
+```bash
+npm test
+npm run test:coverage
 ```
 
-The below APIs use a different type of authentication and require a much simpler way of initializing the SDK.
-```javascript
-const mypos = require('mypos')({
-    isSandbox: true,    // Whether to use the Sandbox environment
-    apiKey: '',         // Generated via the myPOS Account
-    apiSecret: '',      // Generated via the myPOS Account
-    logLevel: 'debug',  // Logging level
-});
-```
-## Transactions
-### List Transactions
-```javascript
-app.get('/transactions', (req, res) => {
-    mypos.transactions.list(req.query, (result) => {
-        res.send(result);
-    });
-});
-```
-### Get Transaction Details
-```javascript
-app.get('/transactionDetails', (req, res) => {
-    mypos.transactions.get('POSA01720049UZNE', (result) => {
-        res.send(result);
-    });
-});
-```
-## Devices
-### List Devices
-```javascript
-app.get('/devices', (req, res) => {
-    mypos.devices.list({
-        page: 1,
-        count: 5
-    }, (result) => {
-        res.send(result);
-    });
-});
-```
-### Get Device Details
-```javascript
-app.get('/deviceDetails', (req, res) => {
-    mypos.devices.get('90005195', (result) => {
-        res.send(result);
-    });
-});
-```
-### List Device Transactions
-```javascript
-app.get('/deviceTransactions', (req, res) => {
-    mypos.devices.transactions.get('90004284', {},(result) => {
-        res.send(result);
-    });
-});
-```
-### List All Devices Transactions
-```javascript
-app.get('/deviceTransactionsAll', (req, res) => {
-    mypos.devices.transactions.list({}, (result) => {
-        res.send(result);
-    });
-});
+### Running Examples
+
+```bash
+# Original example
+npm start
+
+# Interactive demo
+npm run demo
 ```
 
-## Webhooks
-### List Webhooks
-```javascript
-app.get('/webhooks', (req, res) => {
-    mypos.webhooks.list(req.query, (result) => {
-        res.send(result);
-    });
-});
-```
-### Get Webhook Details
-```javascript
-app.get('/webhooks/details', (req, res) => {
-    mypos.webhooks.details('d3fca256-ebbc-42d8-9195-d7f0784d546a' /* Webhook ID */, (result) => {
-        res.send(result);
-    });
-});
-```
-### Create a Webhook
-```javascript
-app.get('/webhooks/create', (req, res) => {
-    mypos.webhooks.create(
-        'https://example.com',  // Payload URL
-        'my-secret',            // Secret
-        (result) => {
-            res.send(result);
-        });
-});
-```
-### Update a Webhook
-```javascript
-app.get('/webhooks/update', (req, res) => {
-    mypos.webhooks.update(
-        'd3fca256-ebbc-42d8-9195-d7f0784d546a', // Webhook ID
-        'https://example.com',                  // Payload URL
-        'my-secret',                            // Secret
-        0,                                      // Active flag 
-        (result) => {
-            res.send(result);
-        });
-});
-```
-### Delete a Webhook
-```javascript
-app.get('/webhooks/delete', (req, res) => {
-    mypos.webhooks.delete(
-        'd3fca256-ebbc-42d8-9195-d7f0784d546a', // Webhook ID
-        (result) => {
-            res.send(result);
-        });
-});
-```
-### List Webhook Events
-```javascript
-app.get('/webhook-events', (req, res) => {
-    mypos.webhooks.events.list(req.query, (result) => {
-        res.send(result);
-    });
-});
-```
-### Subscribe for an Event
-```javascript
-app.get('/webhooks/subscribe', (req, res) => {
-    mypos.webhooks.subscriptions.create(
-        'd3fca256-ebbc-42d8-9195-d7f0784d546a', // Webhook ID
-        '0c2ac3dd-c62b-404b-ac7f-ac805ea268ff', // Event ID
-        (result) => {
-            res.send(result);
-        });
-});
-```
-### List Event Subscriptions
-```javascript
-app.get('/webhook-subscriptions', (req, res) => {
-    mypos.webhooks.subscriptions.list(
-        req.query,
-        (result) => {
-            res.send(result);
-        });
-});
-```
-### Get Event Subscription Details
-```javascript
-app.get('/webhook-subscriptions/details', (req, res) => {
-    mypos.webhooks.subscriptions.details(
-        '2b5b37ae-c88a-4563-936d-36d6e8280912', // Subscription ID
-        (result) => {
-            res.send(result);
-        });
-});
-```
-### Unsubscribe from an Event
-```javascript
-app.get('/webhooks/unsubscribe', (req, res) => {
-    mypos.webhooks.subscriptions.delete(
-        '18912b44-5c37-45ea-b933-103ff813cb71', // Subscription ID
-        (result) => {
-            res.send(result);
-        });
-});
-```
+## 🔧 Troubleshooting
+
+### Common Issues
+
+1. **"MYPOS_SID is required"**
+   - Make sure you've set the environment variables in `.env`
+   - Check that `MYPOS_ENVIRONMENT` is set correctly
+
+2. **"MYPOS_PRIVATE_KEY is required"**
+   - Set `MYPOS_PRIVATE_KEY_*` in your `.env` file, or
+   - Place your private key in a `.pem` file (see Configuration section)
+
+3. **"Invalid signature"**
+   - Verify your private key is correct
+   - Ensure the key matches the environment you're using
+
+4. **"Cart must be a non-empty array"**
+   - Provide cart items in the correct format: `[{name, price, quantity}]`
+
+### Getting Help
+
+- Check the [myPOS Developer Documentation](https://developers.mypos.eu/)
+- Use the interactive demo to test your configuration
+- Review the example.env.txt file for proper configuration
+
+## 📄 License
+
+ISC
+
+## 🔗 Links
+
+- [myPOS Website](https://www.mypos.eu/)
+- [Developer Documentation](https://developers.mypos.eu/)
+- [GitHub Repository](https://github.com/developermypos/mypos-js)

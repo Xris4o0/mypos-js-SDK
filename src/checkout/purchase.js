@@ -66,7 +66,8 @@ async function purchase(params = {}) {
     cancelUrl: params.cancelUrl || config.cancelUrl,
     notifyUrl: params.notifyUrl || config.notifyUrl,
     customer,
-    note: params.note
+    note: params.note,
+    paymentParametersRequired: params.paymentParametersRequired || 1
     // Add more as needed
   };
 
@@ -75,12 +76,39 @@ async function purchase(params = {}) {
 
   // Call the existing CheckoutPurchaseRequest
   return new Promise((resolve, reject) => {
-    const req = new CheckoutPurchaseRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      // Assume redirect URL is in response.URL or similar (adjust as needed)
-      resolve({ redirectUrl: response.URL, rawResponse: response });
-    });
+    try {
+      const req = new CheckoutPurchaseRequest(mypos, requestParams);
+      req.send((response) => {
+        try {
+          // The send method calls handler(data) directly, not handler(err, data)
+          // So response is the actual data, not an error
+          
+          console.log('Purchase response type:', typeof response);
+          console.log('Purchase response length:', response ? response.length : 'null');
+          
+          // Handle different response formats
+          if (typeof response === 'string') {
+            // If response is HTML (redirect form), extract URL from action attribute
+            const urlMatch = response.match(/action="([^"]+)"/);
+            const redirectUrl = urlMatch ? urlMatch[1] : null;
+            console.log('Extracted redirect URL:', redirectUrl);
+            resolve({ redirectUrl, rawResponse: response });
+          } else if (response && response.URL) {
+            // If response has URL property
+            resolve({ redirectUrl: response.URL, rawResponse: response });
+          } else {
+            // Fallback - return the response as-is
+            resolve({ redirectUrl: null, rawResponse: response });
+          }
+        } catch (error) {
+          console.error('Error processing purchase response:', error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      console.error('Error creating purchase request:', error);
+      reject(error);
+    }
   });
 }
 
