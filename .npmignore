@@ -1,13 +1,81 @@
+# Development files
 __tests__/
-examples/
-*.env*
-*.log
-.git/
-.github/
-.DS_Store
-node_modules/
-package-lock.json
-public_certificate.txt
-private_key.txt
+*.test.js
+.env
+.env.example
+example.env.txt
+jest.config.js
+
+# Build artifacts
+coverage/
+.nyc_output/
+*.tgz
+
+# Development tools
+.eslintrc*
+.prettierrc*
 .vscode/
-.idea/ 
+.idea/
+*.code-workspace
+
+# Examples (keep for reference - comment out to exclude)
+# examples/
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# CI/CD
+.travis.yml
+.circleci/
+azure-pipelines.yml
+
+# Extended documentation (keep README.md only)
+v2/FLOW_DOCUMENTATION.md
+v2/IMPLEMENTATION_SUMMARY.md
+v2/PACKAGING_GUIDE.md
+
+# IMPORTANT: Private keys and certificates
+private_key*.pem
+private_key*.txt
+public_certificate*.txt
+*.key
+*.p12
+*.pfx
+*.cer
+*.crt
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# IDE
+*.sublime-project
+*.sublime-workspace
+
+# Build directories
+builds/
+dist/
+build/
+
+# Dependency directories (shouldn't be published)
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Lock files (let users generate their own)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
