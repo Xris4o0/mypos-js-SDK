@@ -3,7 +3,7 @@
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
 const { validateTransactionId } = require('../config/validator');
-const { safeVal, generateOrderId } = require('../utils/common');
+const { safeVal } = require('../utils/common');
 
 /**
  * Reversal Request - Reverse a transaction
@@ -22,9 +22,7 @@ class ReversalRequest extends CheckoutRequest {
       WalletNumber: safeVal(params.walletNumber, config.clientNumber),
       KeyIndex: safeVal(params.keyIndex, config.keyIndex),
       IPC_Trnref: params.transactionId,
-      OrderID: safeVal(params.orderId, generateOrderId()),
-      OutputFormat: safeVal(params.outputFormat, config.outputFormat),
-      Note: params.note
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat)
     };
     
     super(config, ipcParams);
@@ -35,7 +33,6 @@ class ReversalRequest extends CheckoutRequest {
  * Create a reversal request
  * @param {Object} params - Reversal parameters
  * @param {string} params.transactionId - Transaction reference to reverse
- * @param {string} params.note - Optional note
  * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function reversal(params = {}) {
