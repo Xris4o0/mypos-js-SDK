@@ -3,16 +3,23 @@
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
 const { validateAmount } = require('../config/validator');
-const { safeVal, generateOrderId } = require('../utils/common');
+const { safeVal } = require('../utils/common');
 
 /**
- * Send Money Request - Send money to another wallet
+ * Send Money Request - Send money to another wallet programmatically
+ * Note: This functionality must be enabled first. Contact online@mypos.com
  */
 class SendMoneyRequest extends CheckoutRequest {
   constructor(config, params) {
     // Validate required fields
-    if (!params.walletNumber) {
-      throw new Error('walletNumber is required');
+    if (!params.customerWalletNumber) {
+      throw new Error('customerWalletNumber is required');
+    }
+    if (!params.transactionReference) {
+      throw new Error('transactionReference is required');
+    }
+    if (!params.reason) {
+      throw new Error('reason is required');
     }
     validateAmount(params.amount);
     
@@ -21,13 +28,12 @@ class SendMoneyRequest extends CheckoutRequest {
       IPCmethod: 'IPCSendMoney',
       IPCVersion: safeVal(params.version, config.version),
       IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      WalletNumber: params.walletNumber,
+      CustomerWalletNumber: params.customerWalletNumber,
       Amount: params.amount,
       Currency: safeVal(params.currency, config.currency),
-      OrderID: safeVal(params.orderId, generateOrderId()),
+      TransactionReference: params.transactionReference,
+      Reason: params.reason,
       KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      Note: params.note,
       OutputFormat: safeVal(params.outputFormat, config.outputFormat)
     };
     
@@ -36,12 +42,13 @@ class SendMoneyRequest extends CheckoutRequest {
 }
 
 /**
- * Send money to another wallet
+ * Send money to another wallet programmatically
  * @param {Object} params - Parameters
- * @param {string} params.walletNumber - Recipient wallet number
+ * @param {string} params.customerWalletNumber - myPOS Account number (recipient)
  * @param {number} params.amount - Amount to send
  * @param {string} params.currency - Currency code
- * @param {string} params.note - Optional note
+ * @param {string} params.transactionReference - Used to uniquely identify a transaction in IPC
+ * @param {string} params.reason - The reason for the transfer
  * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function sendMoney(params = {}) {
