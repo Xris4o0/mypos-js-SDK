@@ -1,30 +1,45 @@
-// src/checkout/pre-auth-status.js
-// User-friendly preAuthStatus function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutPreAuthStatusRequest = require('../resources/checkout/pre-auth-status');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { validateTransactionId } = require('../config/validator');
+const { safeVal } = require('../utils/common');
 
 /**
- * User-facing preAuthStatus function
- * @param {Object} params - { transactionId, ...overrides }
- * @returns {Promise<any>}
+ * Pre-Auth Status Request - Get status of pre-authorization
+ */
+class PreAuthStatusRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Validate required fields
+    validateTransactionId(params.transactionId);
+    
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCPreAuthStatus',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      IPC_Trnref: params.transactionId,
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat)
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Get pre-authorization status
+ * @param {Object} params - Parameters
+ * @param {string} params.transactionId - Pre-auth reference
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function preAuthStatus(params = {}) {
   const config = loadConfig(params);
-  if (!params.transactionId) throw new Error('transactionId is required');
-  const requestParams = {
-    transactionId: params.transactionId,
-    note: params.note
-  };
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutPreAuthStatusRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new PreAuthStatusRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = preAuthStatus; 
+module.exports = preAuthStatus;
+

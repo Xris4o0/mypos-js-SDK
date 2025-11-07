@@ -1,30 +1,41 @@
-// src/checkout/purchase-ok.js
-// User-friendly purchaseOK function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutPurchaseOKRequest = require('../resources/checkout/purchase-ok');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { safeVal } = require('../utils/common');
 
 /**
- * User-facing purchaseOK function
- * @param {Object} params - { transactionId, ...overrides }
- * @returns {Promise<any>}
+ * Purchase OK Request - Handle successful purchase callback
+ */
+class PurchaseOKRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCPurchaseOK',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      IPC_Trnref: params.transactionId,
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat)
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Handle purchase OK callback
+ * @param {Object} params - Parameters
+ * @param {string} params.transactionId - Transaction reference
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function purchaseOK(params = {}) {
   const config = loadConfig(params);
-  if (!params.transactionId) throw new Error('transactionId is required');
-  const requestParams = {
-    transactionId: params.transactionId,
-    note: params.note
-  };
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutPurchaseOKRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new PurchaseOKRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = purchaseOK; 
+module.exports = purchaseOK;
+

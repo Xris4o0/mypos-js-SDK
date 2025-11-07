@@ -1,0 +1,56 @@
+{
+  "name": "@mypos/JS-checkout-SDK",
+  "version": "1.1.0",
+  "description": "Modern NodeJS SDK for myPOS Checkout API. Supports all checkout operations including purchase, refund, pre-authorization, and more.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./v2": "./src/index.js",
+    "./src/*": "./src/*.js",
+    "./v2/*": "./src/*.js"
+  },
+  "scripts": {
+    "test": "jest --config src/jest.config.js",
+    "test:unit": "jest --config src/jest.config.js src/__tests__/unit",
+    "test:integration": "jest --config src/jest.config.js src/__tests__/integration",
+    "test:coverage": "jest --config src/jest.config.js --coverage",
+    "prepublishOnly": "npm test"
+  },
+  "keywords": [
+    "mypos",
+    "checkout",
+    "payments",
+    "sdk",
+    "ecommerce",
+    "nodejs",
+    "api",
+    "payment-gateway"
+  ],
+  "author": "myPOS",
+  "license": "ISC",
+  "dependencies": {
+    "node-rsa": "^1.0.6",
+    "uuid": "^11.1.0",
+    "dotenv": "^16.5.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/developermypos/mypos-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/developermypos/mypos-js/issues"
+  },
+  "homepage": "https://github.com/developermypos/mypos-js#readme",
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "express": "^5.1.0"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

@@ -1,56 +1,78 @@
-// src/checkout/ia-purchase.js
-// User-friendly iaPurchase function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutIAPurchaseRequest = require('../resources/checkout/ia-purchase');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { buildCartItems, calculateTotal } = require('../utils/cart-builder');
+const { safeVal, generateOrderId } = require('../utils/common');
 
 /**
- * User-facing iaPurchase function
- * @param {Object} params - { cart, tip, currency, ...overrides }
- * @returns {Promise<any>}
+ * IA Purchase Request - Purchase with stored card token (In-App)
+ */
+class IAPurchaseRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Validate required fields
+    if (!params.cardToken) {
+      throw new Error('cardToken is required');
+    }
+    
+    // Build and validate cart items
+    const cartItems = buildCartItems(params.cart, params.discount, params.tip);
+    const amount = params.amount !== undefined ? params.amount : calculateTotal(cartItems);
+    
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCIAPurchase',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      Amount: amount,
+      Currency: safeVal(params.currency, config.currency),
+      OrderID: safeVal(params.orderId, generateOrderId()),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      CardToken: params.cardToken,
+      Note: params.note,
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat),
+      CartItems: cartItems.length
+    };
+    
+    // Add customer details if provided
+    if (params.customer) {
+      ipcParams.CustomerEmail = params.customer.email;
+      ipcParams.CustomerFirstNames = params.customer.firstNames;
+      ipcParams.CustomerFamilyName = params.customer.familyName;
+      ipcParams.CustomerPhone = params.customer.phone;
+    }
+    
+    // Add cart items
+    cartItems.forEach((item, index) => {
+      const num = index + 1;
+      ipcParams[`Article_${num}`] = item.name;
+      ipcParams[`Quantity_${num}`] = item.quantity;
+      ipcParams[`Price_${num}`] = item.price;
+      ipcParams[`Currency_${num}`] = ipcParams.Currency;
+      ipcParams[`Amount_${num}`] = item.price * item.quantity;
+    });
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Purchase with stored card
+ * @param {Object} params - Parameters
+ * @param {string} params.cardToken - Stored card token
+ * @param {Array} params.cart - Cart items
+ * @param {Object} params.customer - Customer info
+ * @param {string} params.currency - Currency code
+ * @param {string} params.note - Optional note
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function iaPurchase(params = {}) {
   const config = loadConfig(params);
-  if (!Array.isArray(params.cart) || params.cart.length === 0) {
-    throw new Error('cart must be a non-empty array of items');
-  }
-  let amount = 0;
-  const cartItems = params.cart.map(item => {
-    if (typeof item.price !== 'number' || typeof item.quantity !== 'number') {
-      throw new Error('Each cart item must have numeric price and quantity');
-    }
-    amount += item.price * item.quantity;
-    return {
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity
-    };
-  });
-  if (params.tip) {
-    if (typeof params.tip !== 'number') throw new Error('tip must be a number');
-    amount += params.tip;
-  }
-  amount = typeof params.amount === 'number' ? params.amount : amount;
-  const customer = params.customer || {};
-  const requestParams = {
-    amount,
-    currency: params.currency || config.currency || 'EUR',
-    cartItems,
-    okUrl: params.successUrl || config.successUrl,
-    cancelUrl: params.cancelUrl || config.cancelUrl,
-    notifyUrl: params.notifyUrl || config.notifyUrl,
-    customer,
-    note: params.note
-  };
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutIAPurchaseRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new IAPurchaseRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = iaPurchase; 
+module.exports = iaPurchase;
+

@@ -1,36 +1,49 @@
-// src/index.js
-// Main entry point for the new user-friendly myPOS SDK interface
+'use strict';
 
+/**
+ * MyPOS Checkout SDK
+ * Modern, clean SDK for generating myPOS checkout requests
+ * 
+ * @example Functional API (recommended)
+ * const { purchase, refund, reversal } = require('@mypos/JS-checkout-SDK');
+ * 
+ * const result = await purchase({
+ *   cart: [{name: 'Product', price: 50, quantity: 1}],
+ *   customer: {email: 'user@example.com'}
+ * });
+ * 
+ * @example Class-based API (optional)
+ * const { MyPOSCheckout } = require('@mypos/JS-checkout-SDK');
+ * const checkout = new MyPOSCheckout(config);
+ * await checkout.purchase({...});
+ */
+
+// Export all checkout operations (functional API)
+const checkout = require('./checkout');
+
+// Export client class (class-based API)
+const MyPOSCheckout = require('./client');
+
+// Export utilities for advanced use cases
+const { loadConfig, clearCache } = require('./config');
+const errors = require('./core/errors');
+
+// Main exports
 module.exports = {
-  purchase: require('./checkout/purchase'),
-  refund: require('./checkout/refund'),
-  sendMoney: require('./checkout/send-money'),
-  reversal: require('./checkout/reversal'),
-  requestMoney: require('./checkout/request-money'),
-  purchaseByIcard: require('./checkout/purchase-by-icard'),
-  purchaseCancel: require('./checkout/purchase-cancel'),
-  purchaseNotify: require('./checkout/purchase-notify'),
-  purchaseOK: require('./checkout/purchase-ok'),
-  purchaseRollback: require('./checkout/purchase-rollback'),
-  preAuthorization: require('./checkout/pre-authorization'),
-  preAuthorizationOK: require('./checkout/pre-authorization-ok'),
-  preAuthorizationNotify: require('./checkout/pre-authorization-notify'),
-  preAuthorizationCancel: require('./checkout/pre-authorization-cancel'),
-  preAuthStatus: require('./checkout/pre-auth-status'),
-  preAuthCompletion: require('./checkout/pre-auth-completion'),
-  preAuthCancellation: require('./checkout/pre-auth-cancellation'),
-  paymentSessionCreate: require('./checkout/payment-session-create'),
-  mandateManagment: require('./checkout/mandate-managment'),
-  iaStoreCard: require('./checkout/ia-store-card'),
-  iaStoreCardUpdate: require('./checkout/ia-store-card-update'),
-  iaPurchase: require('./checkout/ia-purchase'),
-  iaPreAuthorization: require('./checkout/ia-pre-authorization'),
-  authorization: require('./checkout/authorization'),
-  authorizationCapture: require('./checkout/authorization-capture'),
-  authorizationReverse: require('./checkout/authorization-reverse'),
-  authorizationList: require('./checkout/authorization-list'),
-  getPaymentStatus: require('./checkout/get-payment-status'),
+  // All checkout operations (functional API)
+  ...checkout,
+  
+  // Client class (class-based API)
+  MyPOSCheckout,
+  
+  // Utilities
+  loadConfig,
+  clearCache,
+  
+  // Error classes
+  ...errors
 };
 
 // Default export for convenience
-module.exports.default = module.exports; 
+module.exports.default = module.exports;
+

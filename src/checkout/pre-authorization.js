@@ -1,56 +1,62 @@
-// src/checkout/pre-authorization.js
-// User-friendly preAuthorization function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutPreAuthorizationRequest = require('../resources/checkout/pre-authorization');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { safeVal, generateOrderId } = require('../utils/common');
 
 /**
- * User-facing preAuthorization function
- * @param {Object} params - { cart, tip, currency, ...overrides }
- * @returns {Promise<any>}
+ * Pre-Authorization Request - Create a pre-authorization
+ * NOTE: PreAuthorization does NOT use cart items, only ItemName and Amount
+ */
+class PreAuthorizationRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Validate required fields
+    if (!params.amount && typeof params.amount !== 'number') {
+      throw new Error('amount is required for pre-authorization');
+    }
+    
+    if (!params.itemName && !params.ItemName) {
+      throw new Error('itemName is required for pre-authorization');
+    }
+    
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCPreAuthorization',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      Amount: params.amount,
+      Currency: safeVal(params.currency, config.currency),
+      OrderID: safeVal(params.orderId, generateOrderId()),
+      URL_OK: safeVal(params.successUrl, config.successUrl),
+      URL_Cancel: safeVal(params.cancelUrl, config.cancelUrl),
+      URL_Notify: safeVal(params.notifyUrl, config.notifyUrl),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      ItemName: params.itemName || params.ItemName,
+      AccountSettlement: params.accountSettlement || params.AccountSettlement,
+      Note: params.note
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Create a pre-authorization
+ * @param {Object} params - Parameters
+ * @param {number} params.amount - Amount to pre-authorize (REQUIRED)
+ * @param {string} params.itemName - Description of item (REQUIRED)
+ * @param {string} params.currency - Currency code
+ * @param {string} params.accountSettlement - Optional account settlement
+ * @param {string} params.note - Optional note
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function preAuthorization(params = {}) {
   const config = loadConfig(params);
-  if (!Array.isArray(params.cart) || params.cart.length === 0) {
-    throw new Error('cart must be a non-empty array of items');
-  }
-  let amount = 0;
-  const cartItems = params.cart.map(item => {
-    if (typeof item.price !== 'number' || typeof item.quantity !== 'number') {
-      throw new Error('Each cart item must have numeric price and quantity');
-    }
-    amount += item.price * item.quantity;
-    return {
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity
-    };
-  });
-  if (params.tip) {
-    if (typeof params.tip !== 'number') throw new Error('tip must be a number');
-    amount += params.tip;
-  }
-  amount = typeof params.amount === 'number' ? params.amount : amount;
-  const customer = params.customer || {};
-  const requestParams = {
-    amount,
-    currency: params.currency || config.currency || 'EUR',
-    cartItems,
-    okUrl: params.successUrl || config.successUrl,
-    cancelUrl: params.cancelUrl || config.cancelUrl,
-    notifyUrl: params.notifyUrl || config.notifyUrl,
-    customer,
-    note: params.note
-  };
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutPreAuthorizationRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new PreAuthorizationRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = preAuthorization; 
+module.exports = preAuthorization;
+

@@ -1,28 +1,41 @@
-// src/checkout/authorization-list.js
-// User-friendly authorizationList function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutAuthorizationListRequest = require('../resources/checkout/authorization-list');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { safeVal } = require('../utils/common');
 
 /**
- * User-facing authorizationList function
- * @param {Object} params - { ...overrides }
- * @returns {Promise<any>}
+ * Authorization List Request - List authorizations
+ */
+class AuthorizationListRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCAuthorizationList',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat),
+      Note: params.note
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * List authorizations
+ * @param {Object} params - Parameters
+ * @param {string} params.note - Optional note
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function authorizationList(params = {}) {
   const config = loadConfig(params);
-  const requestParams = {
-    ...params
-  };
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutAuthorizationListRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new AuthorizationListRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = authorizationList; 
+module.exports = authorizationList;
+

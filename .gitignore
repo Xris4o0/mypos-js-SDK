@@ -1,9 +1,8 @@
 .idea
 node_modules
-package.json
-package-lock.json
 .env
 public_certificate.txt
 private_key.txt
 *.pem
-builds/*.tgz
+*.tgz
+builds/

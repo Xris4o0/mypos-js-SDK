@@ -1,10 +1,10 @@
 # Development files
-__tests__/
+src/__tests__/
 *.test.js
 .env
 .env.example
 example.env.txt
-jest.config.js
+src/jest.config.js
 
 # Build artifacts
 coverage/
@@ -18,8 +18,7 @@ coverage/
 .idea/
 *.code-workspace
 
-# Examples (keep for reference - comment out to exclude)
-# examples/
+# Examples directory removed - see src/EXAMPLE_USAGE.md instead
 
 # Git files
 .git/
@@ -33,9 +32,9 @@ coverage/
 azure-pipelines.yml
 
 # Extended documentation (keep README.md only)
-v2/FLOW_DOCUMENTATION.md
-v2/IMPLEMENTATION_SUMMARY.md
-v2/PACKAGING_GUIDE.md
+src/FLOW_DOCUMENTATION.md
+src/IMPLEMENTATION_SUMMARY.md
+src/PACKAGING_GUIDE.md
 
 # IMPORTANT: Private keys and certificates
 private_key*.pem

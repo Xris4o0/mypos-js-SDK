@@ -1,36 +1,53 @@
-// src/checkout/refund.js
-// User-friendly refund function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutRefundRequest = require('../resources/checkout/refund');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { validateAmount, validateTransactionId } = require('../config/validator');
+const { safeVal, generateOrderId } = require('../utils/common');
 
 /**
- * User-facing refund function
- * @param {Object} params - { transactionId, amount, ...overrides }
- * @returns {Promise<any>}
+ * Refund Request - Refund a completed transaction
+ */
+class RefundRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Validate required fields
+    validateTransactionId(params.transactionId);
+    validateAmount(params.amount);
+    
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCRefund',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      IPC_Trnref: params.transactionId,
+      Amount: params.amount,
+      Currency: safeVal(params.currency, config.currency),
+      OrderID: safeVal(params.orderId, generateOrderId()),
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat),
+      Note: params.note
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Create a refund request
+ * @param {Object} params - Refund parameters
+ * @param {string} params.transactionId - Transaction reference to refund
+ * @param {number} params.amount - Amount to refund
+ * @param {string} params.currency - Currency code (defaults to config)
+ * @param {string} params.note - Optional note
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function refund(params = {}) {
   const config = loadConfig(params);
-  if (!params.transactionId) throw new Error('transactionId is required');
-  if (typeof params.amount !== 'number') throw new Error('amount must be a number');
-
-  const requestParams = {
-    transactionId: params.transactionId,
-    amount: params.amount,
-    currency: params.currency || config.currency || 'EUR',
-    note: params.note
-    // Add more as needed
-  };
-
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutRefundRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new RefundRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = refund; 
+module.exports = refund;
+

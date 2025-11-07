@@ -1,36 +1,45 @@
-// src/checkout/reversal.js
-// User-friendly reversal function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutReversalRequest = require('../resources/checkout/reversal');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { validateTransactionId } = require('../config/validator');
+const { safeVal } = require('../utils/common');
 
 /**
- * User-facing reversal function
- * @param {Object} params - { transactionId, amount, ...overrides }
- * @returns {Promise<any>}
+ * Reversal Request - Reverse a transaction
+ */
+class ReversalRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Validate required fields
+    validateTransactionId(params.transactionId);
+    
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCReversal',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      IPC_Trnref: params.transactionId,
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat)
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Create a reversal request
+ * @param {Object} params - Reversal parameters
+ * @param {string} params.transactionId - Transaction reference to reverse
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function reversal(params = {}) {
   const config = loadConfig(params);
-  if (!params.transactionId) throw new Error('transactionId is required');
-  if (typeof params.amount !== 'number') throw new Error('amount must be a number');
-
-  const requestParams = {
-    transactionId: params.transactionId,
-    amount: params.amount,
-    currency: params.currency || config.currency || 'EUR',
-    note: params.note
-    // Add more as needed
-  };
-
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutReversalRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new ReversalRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = reversal; 
+module.exports = reversal;
+

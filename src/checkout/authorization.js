@@ -1,31 +1,54 @@
-// src/checkout/authorization.js
-// User-friendly authorization function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutAuthorizationRequest = require('../resources/checkout/authorization');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { validateAmount } = require('../config/validator');
+const { safeVal, generateOrderId } = require('../utils/common');
 
 /**
- * User-facing authorization function
- * @param {Object} params - { amount, currency, ...overrides }
- * @returns {Promise<any>}
+ * Authorization Request - Create an authorization
+ */
+class AuthorizationRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Validate required fields
+    validateAmount(params.amount);
+    
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCAuthorization',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      Amount: params.amount,
+      Currency: safeVal(params.currency, config.currency),
+      OrderID: safeVal(params.orderId, generateOrderId()),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      Note: params.note,
+      URL_OK: safeVal(params.successUrl, config.successUrl),
+      URL_Cancel: safeVal(params.cancelUrl, config.cancelUrl),
+      URL_Notify: safeVal(params.notifyUrl, config.notifyUrl),
+      CardTokenRequest: safeVal(params.cardTokenRequest, config.cardTokenRequest),
+      PaymentParametersRequired: safeVal(params.paymentParametersRequired, config.paymentParametersRequired)
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Create an authorization
+ * @param {Object} params - Parameters
+ * @param {number} params.amount - Amount to authorize
+ * @param {string} params.currency - Currency code
+ * @param {string} params.note - Optional note
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function authorization(params = {}) {
   const config = loadConfig(params);
-  if (typeof params.amount !== 'number') throw new Error('amount must be a number');
-  const requestParams = {
-    amount: params.amount,
-    currency: params.currency || config.currency || 'EUR',
-    note: params.note
-  };
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutAuthorizationRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new AuthorizationRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = authorization; 
+module.exports = authorization;
+

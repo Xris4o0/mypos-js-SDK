@@ -1,30 +1,41 @@
-// src/checkout/purchase-notify.js
-// User-friendly purchaseNotify function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutPurchaseNotifyRequest = require('../resources/checkout/purchase-notify');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { safeVal } = require('../utils/common');
 
 /**
- * User-facing purchaseNotify function
- * @param {Object} params - { transactionId, ...overrides }
- * @returns {Promise<any>}
+ * Purchase Notify Request - Handle purchase notification callback
+ */
+class PurchaseNotifyRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCPurchaseNotify',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      IPC_Trnref: params.transactionId,
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat)
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Handle purchase notify callback
+ * @param {Object} params - Parameters
+ * @param {string} params.transactionId - Transaction reference
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function purchaseNotify(params = {}) {
   const config = loadConfig(params);
-  if (!params.transactionId) throw new Error('transactionId is required');
-  const requestParams = {
-    transactionId: params.transactionId,
-    note: params.note
-  };
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutPurchaseNotifyRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new PurchaseNotifyRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = purchaseNotify; 
+module.exports = purchaseNotify;
+

@@ -1,36 +1,61 @@
-// src/checkout/send-money.js
-// User-friendly sendMoney function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutSendMoneyRequest = require('../resources/checkout/send-money');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { validateAmount } = require('../config/validator');
+const { safeVal } = require('../utils/common');
 
 /**
- * User-facing sendMoney function
- * @param {Object} params - { walletNumber, amount, ...overrides }
- * @returns {Promise<any>}
+ * Send Money Request - Send money to another wallet programmatically
+ * Note: This functionality must be enabled first. Contact online@mypos.com
+ */
+class SendMoneyRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Validate required fields
+    if (!params.customerWalletNumber) {
+      throw new Error('customerWalletNumber is required');
+    }
+    if (!params.transactionReference) {
+      throw new Error('transactionReference is required');
+    }
+    if (!params.reason) {
+      throw new Error('reason is required');
+    }
+    validateAmount(params.amount);
+    
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCSendMoney',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      CustomerWalletNumber: params.customerWalletNumber,
+      Amount: params.amount,
+      Currency: safeVal(params.currency, config.currency),
+      TransactionReference: params.transactionReference,
+      Reason: params.reason,
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat)
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Send money to another wallet programmatically
+ * @param {Object} params - Parameters
+ * @param {string} params.customerWalletNumber - myPOS Account number (recipient)
+ * @param {number} params.amount - Amount to send
+ * @param {string} params.currency - Currency code
+ * @param {string} params.transactionReference - Used to uniquely identify a transaction in IPC
+ * @param {string} params.reason - The reason for the transfer
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function sendMoney(params = {}) {
   const config = loadConfig(params);
-  if (!params.walletNumber) throw new Error('walletNumber (recipient client number) is required');
-  if (typeof params.amount !== 'number') throw new Error('amount must be a number');
-
-  const requestParams = {
-    walletNumber: params.walletNumber,
-    amount: params.amount,
-    currency: params.currency || config.currency || 'EUR',
-    note: params.note
-    // Add more as needed
-  };
-
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutSendMoneyRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new SendMoneyRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = sendMoney; 
+module.exports = sendMoney;
+

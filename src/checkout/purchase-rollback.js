@@ -1,30 +1,48 @@
-// src/checkout/purchase-rollback.js
-// User-friendly purchaseRollback function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutPurchaseRollbackRequest = require('../resources/checkout/purchase-rollback');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { validateTransactionId } = require('../config/validator');
+const { safeVal, generateOrderId } = require('../utils/common');
 
 /**
- * User-facing purchaseRollback function
- * @param {Object} params - { transactionId, ...overrides }
- * @returns {Promise<any>}
+ * Purchase Rollback Request - Rollback a purchase
+ */
+class PurchaseRollbackRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Validate required fields
+    validateTransactionId(params.transactionId);
+    
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCPurchaseRollback',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      IPC_Trnref: params.transactionId,
+      OrderID: safeVal(params.orderId, generateOrderId()),
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat),
+      Note: params.note
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Rollback a purchase
+ * @param {Object} params - Parameters
+ * @param {string} params.transactionId - Transaction reference
+ * @param {string} params.note - Optional note
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function purchaseRollback(params = {}) {
   const config = loadConfig(params);
-  if (!params.transactionId) throw new Error('transactionId is required');
-  const requestParams = {
-    transactionId: params.transactionId,
-    note: params.note
-  };
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutPurchaseRollbackRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new PurchaseRollbackRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = purchaseRollback; 
+module.exports = purchaseRollback;
+

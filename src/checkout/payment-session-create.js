@@ -1,56 +1,74 @@
-// src/checkout/payment-session-create.js
-// User-friendly paymentSessionCreate function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutPaymentSessionCreateRequest = require('../resources/checkout/payment-session-create');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { buildCartItems, calculateTotal } = require('../utils/cart-builder');
+const { safeVal, generateOrderId } = require('../utils/common');
 
 /**
- * User-facing paymentSessionCreate function
- * @param {Object} params - { cart, tip, currency, ...overrides }
- * @returns {Promise<any>}
+ * Payment Session Create Request - Create a payment session
+ */
+class PaymentSessionCreateRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Build and validate cart items
+    const cartItems = buildCartItems(params.cart, params.discount, params.tip);
+    const amount = params.amount !== undefined ? params.amount : calculateTotal(cartItems);
+    
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCPaymentSessionCreate',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      Amount: amount,
+      Currency: safeVal(params.currency, config.currency),
+      OrderID: safeVal(params.orderId, generateOrderId()),
+      URL_OK: safeVal(params.successUrl, config.successUrl),
+      URL_Cancel: safeVal(params.cancelUrl, config.cancelUrl),
+      URL_Notify: safeVal(params.notifyUrl, config.notifyUrl),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      PaymentParametersRequired: safeVal(params.paymentParametersRequired, config.paymentParametersRequired),
+      Note: params.note,
+      CartItems: cartItems.length
+    };
+    
+    // Add customer details if provided
+    if (params.customer) {
+      ipcParams.CustomerEmail = params.customer.email;
+      ipcParams.CustomerFirstNames = params.customer.firstNames;
+      ipcParams.CustomerFamilyName = params.customer.familyName;
+      ipcParams.CustomerPhone = params.customer.phone;
+    }
+    
+    // Add cart items
+    cartItems.forEach((item, index) => {
+      const num = index + 1;
+      ipcParams[`Article_${num}`] = item.name;
+      ipcParams[`Quantity_${num}`] = item.quantity;
+      ipcParams[`Price_${num}`] = item.price;
+      ipcParams[`Currency_${num}`] = ipcParams.Currency;
+      ipcParams[`Amount_${num}`] = item.price * item.quantity;
+    });
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Create a payment session
+ * @param {Object} params - Parameters
+ * @param {Array} params.cart - Cart items
+ * @param {Object} params.customer - Customer info
+ * @param {string} params.currency - Currency code
+ * @param {string} params.note - Optional note
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function paymentSessionCreate(params = {}) {
   const config = loadConfig(params);
-  if (!Array.isArray(params.cart) || params.cart.length === 0) {
-    throw new Error('cart must be a non-empty array of items');
-  }
-  let amount = 0;
-  const cartItems = params.cart.map(item => {
-    if (typeof item.price !== 'number' || typeof item.quantity !== 'number') {
-      throw new Error('Each cart item must have numeric price and quantity');
-    }
-    amount += item.price * item.quantity;
-    return {
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity
-    };
-  });
-  if (params.tip) {
-    if (typeof params.tip !== 'number') throw new Error('tip must be a number');
-    amount += params.tip;
-  }
-  amount = typeof params.amount === 'number' ? params.amount : amount;
-  const customer = params.customer || {};
-  const requestParams = {
-    amount,
-    currency: params.currency || config.currency || 'EUR',
-    cartItems,
-    okUrl: params.successUrl || config.successUrl,
-    cancelUrl: params.cancelUrl || config.cancelUrl,
-    notifyUrl: params.notifyUrl || config.notifyUrl,
-    customer,
-    note: params.note
-  };
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutPaymentSessionCreateRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new PaymentSessionCreateRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = paymentSessionCreate; 
+module.exports = paymentSessionCreate;
+

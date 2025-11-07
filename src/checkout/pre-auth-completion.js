@@ -1,32 +1,53 @@
-// src/checkout/pre-auth-completion.js
-// User-friendly preAuthCompletion function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutPreAuthCompletionRequest = require('../resources/checkout/pre-auth-completion');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { validateAmount, validateTransactionId } = require('../config/validator');
+const { safeVal, generateOrderId } = require('../utils/common');
 
 /**
- * User-facing preAuthCompletion function
- * @param {Object} params - { transactionId, amount, ...overrides }
- * @returns {Promise<any>}
+ * Pre-Auth Completion Request - Complete a pre-authorization
+ */
+class PreAuthCompletionRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Validate required fields
+    validateTransactionId(params.transactionId);
+    validateAmount(params.amount);
+    
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCPreAuthCompletion',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      IPC_Trnref: params.transactionId,
+      Amount: params.amount,
+      Currency: safeVal(params.currency, config.currency),
+      OrderID: safeVal(params.orderId, generateOrderId()),
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat),
+      Note: params.note
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Complete a pre-authorization
+ * @param {Object} params - Parameters
+ * @param {string} params.transactionId - Pre-auth reference
+ * @param {number} params.amount - Amount to complete
+ * @param {string} params.currency - Currency code
+ * @param {string} params.note - Optional note
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function preAuthCompletion(params = {}) {
   const config = loadConfig(params);
-  if (!params.transactionId) throw new Error('transactionId is required');
-  if (typeof params.amount !== 'number') throw new Error('amount must be a number');
-  const requestParams = {
-    transactionId: params.transactionId,
-    amount: params.amount,
-    note: params.note
-  };
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutPreAuthCompletionRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new PreAuthCompletionRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = preAuthCompletion; 
+module.exports = preAuthCompletion;
+

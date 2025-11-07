@@ -1,30 +1,41 @@
-// src/checkout/pre-authorization-notify.js
-// User-friendly preAuthorizationNotify function for myPOS SDK
+'use strict';
 
-const { loadConfig } = require('../utils/config-loader');
-const MyPOS = require('../mypos');
-const CheckoutPreAuthorizationNotifyRequest = require('../resources/checkout/pre-authorization-notify');
+const CheckoutRequest = require('../core/checkout-request');
+const { loadConfig } = require('../config');
+const { safeVal } = require('../utils/common');
 
 /**
- * User-facing preAuthorizationNotify function
- * @param {Object} params - { transactionId, ...overrides }
- * @returns {Promise<any>}
+ * Pre-Authorization Notify Request - Handle pre-authorization notification
+ */
+class PreAuthorizationNotifyRequest extends CheckoutRequest {
+  constructor(config, params) {
+    // Map to IPC parameters
+    const ipcParams = {
+      IPCmethod: 'IPCPreAuthorizationNotify',
+      IPCVersion: safeVal(params.version, config.version),
+      IPCLanguage: safeVal(params.lang, config.lang),
+      SID: safeVal(params.sid, config.sid),
+      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
+      IPC_Trnref: params.transactionId,
+      OutputFormat: safeVal(params.outputFormat, config.outputFormat)
+    };
+    
+    super(config, ipcParams);
+  }
+}
+
+/**
+ * Handle pre-authorization notify callback
+ * @param {Object} params - Parameters
+ * @param {string} params.transactionId - Transaction reference
+ * @returns {Promise<Object>} {redirectUrl, rawResponse}
  */
 async function preAuthorizationNotify(params = {}) {
   const config = loadConfig(params);
-  if (!params.transactionId) throw new Error('transactionId is required');
-  const requestParams = {
-    transactionId: params.transactionId,
-    note: params.note
-  };
-  const mypos = MyPOS(config);
-  return new Promise((resolve, reject) => {
-    const req = new CheckoutPreAuthorizationNotifyRequest(mypos, requestParams);
-    req.send((err, response) => {
-      if (err) return reject(err);
-      resolve(response);
-    });
-  });
+  const request = new PreAuthorizationNotifyRequest(config, params);
+  return await request.execute();
 }
 
-module.exports = preAuthorizationNotify; 
+module.exports = preAuthorizationNotify;
+
