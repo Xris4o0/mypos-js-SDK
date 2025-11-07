@@ -30,7 +30,7 @@ const preAuthorizationOK = require('./pre-authorization-ok');
 const preAuthorizationNotify = require('./pre-authorization-notify');
 const preAuthorizationCancel = require('./pre-authorization-cancel');
 
-// iCard operations
+// In-App (IA) operations
 const iaStoreCard = require('./ia-store-card');
 const iaStoreCardUpdate = require('./ia-store-card-update');
 const iaPurchase = require('./ia-purchase');
@@ -73,11 +73,13 @@ module.exports = {
   preAuthorizationNotify,
   preAuthorizationCancel,
   
-  // iCard operations
+  // In-App (IA) operations
   iaStoreCard,
   iaStoreCardUpdate,
   iaPurchase,
   iaPreAuthorization,
+
+  // iCard operations
   purchaseByIcard,
   
   // Purchase callbacks
