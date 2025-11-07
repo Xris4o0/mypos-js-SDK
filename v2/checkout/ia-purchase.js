@@ -6,7 +6,7 @@ const { buildCartItems, calculateTotal } = require('../utils/cart-builder');
 const { safeVal, generateOrderId } = require('../utils/common');
 
 /**
- * IA Purchase Request - Purchase with stored card token (iCard)
+ * IA Purchase Request - Purchase with stored card token (In-App)
  */
 class IAPurchaseRequest extends CheckoutRequest {
   constructor(config, params) {
