@@ -6,7 +6,7 @@ const { buildCartItems, calculateTotal } = require('../utils/cart-builder');
 const { safeVal, generateOrderId } = require('../utils/common');
 
 /**
- * Purchase By iCard Request - Purchase using iCard
+ * Purchase By iCard Request - Purchase using iCard payment method
  */
 class PurchaseByIcardRequest extends CheckoutRequest {
   constructor(config, params) {
@@ -56,7 +56,7 @@ class PurchaseByIcardRequest extends CheckoutRequest {
 }
 
 /**
- * Purchase using iCard
+ * Purchase using iCard payment method
  * @param {Object} params - Parameters
  * @param {Array} params.cart - Cart items
  * @param {Object} params.customer - Customer info
