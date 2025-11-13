@@ -31,14 +31,6 @@ class IAStoreCardUpdateRequest extends CheckoutRequest {
       Note: params.note
     };
     
-    // Add customer details if provided
-    if (params.customer) {
-      ipcParams.CustomerEmail = params.customer.email;
-      ipcParams.CustomerFirstNames = params.customer.firstNames;
-      ipcParams.CustomerFamilyName = params.customer.familyName;
-      ipcParams.CustomerPhone = params.customer.phone;
-    }
-    
     super(config, ipcParams);
   }
 }

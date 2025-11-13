@@ -41,10 +41,39 @@ function formatAmount(amount) {
   return roundAmount(amount).toFixed(2);
 }
 
+/**
+ * Normalize customer object to use consistent field names
+ * Accepts both firstName/firstNames and lastName/familyName
+ * @param {Object} customer - Customer object with various field name conventions
+ * @returns {Object} Normalized customer object with firstNames and familyName
+ */
+function normalizeCustomer(customer) {
+  if (!customer || typeof customer !== 'object') {
+    return customer;
+  }
+  
+  const normalized = { ...customer };
+  
+  // Normalize first name: accept firstName or firstNames
+  if (normalized.firstName && !normalized.firstNames) {
+    normalized.firstNames = normalized.firstName;
+    delete normalized.firstName;
+  }
+  
+  // Normalize last name: accept lastName or familyName
+  if (normalized.lastName && !normalized.familyName) {
+    normalized.familyName = normalized.lastName;
+    delete normalized.lastName;
+  }
+  
+  return normalized;
+}
+
 module.exports = {
   safeVal,
   generateOrderId,
   roundAmount,
-  formatAmount
+  formatAmount,
+  normalizeCustomer
 };
 

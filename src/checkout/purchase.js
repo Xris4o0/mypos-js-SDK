@@ -3,7 +3,7 @@
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
 const { buildCartItems, calculateTotal } = require('../utils/cart-builder');
-const { safeVal, generateOrderId } = require('../utils/common');
+const { safeVal, generateOrderId, normalizeCustomer } = require('../utils/common');
 
 /**
  * Purchase Request - Create a payment with cart items
@@ -35,16 +35,56 @@ class PurchaseRequest extends CheckoutRequest {
       CartItems: cartItems.length
     };
     
-    // Add customer details if provided
-    if (params.customer) {
-      ipcParams.CustomerEmail = params.customer.email;
-      ipcParams.CustomerFirstNames = params.customer.firstNames;
-      ipcParams.CustomerFamilyName = params.customer.familyName;
-      ipcParams.CustomerPhone = params.customer.phone;
-      ipcParams.CustomerCountry = params.customer.country;
-      ipcParams.CustomerCity = params.customer.city;
-      ipcParams.CustomerZIPCode = params.customer.zipCode;
-      ipcParams.CustomerAddress = params.customer.address;
+    // Add customer details only if PaymentParametersRequired = 1
+    // IPCPurchase needs CustomerEmail, CustomerPhone, CustomerFirstNames, and CustomerFamilyName when PaymentParametersRequired = 1
+    // Customer fields can be provided either:
+    // 1. As nested object: params.customer = {email, phone, firstNames, familyName, ...}
+    // 2. As direct parameters: params.customerEmail, params.customerPhone, params.customerFirstNames, params.customerFamilyName, etc.
+    const paymentParamsRequired = ipcParams.PaymentParametersRequired;
+    if (paymentParamsRequired === 1) {
+      // Build customer object from either nested customer object or direct parameters
+      let customer = params.customer || {};
+      
+      // Allow direct parameters to override or supplement customer object
+      if (params.customerEmail) customer.email = params.customerEmail;
+      if (params.customerPhone) customer.phone = params.customerPhone;
+      if (params.customerFirstNames || params.customerFirstName) {
+        customer.firstNames = params.customerFirstNames || params.customerFirstName;
+      }
+      if (params.customerFamilyName || params.customerLastName) {
+        customer.familyName = params.customerFamilyName || params.customerLastName;
+      }
+      if (params.customerCountry) customer.country = params.customerCountry;
+      if (params.customerCity) customer.city = params.customerCity;
+      if (params.customerZIPCode || params.customerZipCode) {
+        customer.zipCode = params.customerZIPCode || params.customerZipCode;
+      }
+      if (params.customerAddress) customer.address = params.customerAddress;
+      
+      // Normalize customer field names (accept firstName/firstNames and lastName/familyName)
+      customer = normalizeCustomer(customer);
+      
+      if (!customer.email) {
+        throw new Error('Customer email is required when PaymentParametersRequired = 1');
+      }
+      if (!customer.phone) {
+        throw new Error('Customer phone is required when PaymentParametersRequired = 1');
+      }
+      if (!customer.firstNames) {
+        throw new Error('Customer firstNames (or firstName) is required when PaymentParametersRequired = 1');
+      }
+      if (!customer.familyName) {
+        throw new Error('Customer familyName (or lastName) is required when PaymentParametersRequired = 1');
+      }
+      ipcParams.CustomerEmail = customer.email;
+      ipcParams.CustomerPhone = customer.phone;
+      ipcParams.CustomerFirstNames = customer.firstNames;
+      ipcParams.CustomerFamilyName = customer.familyName;
+      // Optional customer fields
+      if (customer.country) ipcParams.CustomerCountry = customer.country;
+      if (customer.city) ipcParams.CustomerCity = customer.city;
+      if (customer.zipCode) ipcParams.CustomerZIPCode = customer.zipCode;
+      if (customer.address) ipcParams.CustomerAddress = customer.address;
     }
     
     // Add cart items
@@ -65,7 +105,19 @@ class PurchaseRequest extends CheckoutRequest {
  * Create a purchase request
  * @param {Object} params - Purchase parameters
  * @param {Array} params.cart - Array of cart items [{name, price, quantity}]
- * @param {Object} params.customer - Customer information {email, firstNames, familyName, ...}
+ * @param {Object} [params.customer] - Customer information (nested object)
+ *   Accepts: {email, phone, firstNames/firstName, familyName/lastName, ...}
+ *   When PaymentParametersRequired = 1: email, phone, firstNames (or firstName), and familyName (or lastName) are required
+ * @param {string} [params.customerEmail] - Customer email (direct parameter, overrides params.customer.email)
+ * @param {string} [params.customerPhone] - Customer phone (direct parameter, overrides params.customer.phone)
+ * @param {string} [params.customerFirstNames] - Customer first names (direct parameter, overrides params.customer.firstNames)
+ * @param {string} [params.customerFirstName] - Customer first name (direct parameter, normalized to firstNames)
+ * @param {string} [params.customerFamilyName] - Customer family name (direct parameter, overrides params.customer.familyName)
+ * @param {string} [params.customerLastName] - Customer last name (direct parameter, normalized to familyName)
+ * @param {string} [params.customerCountry] - Customer country (direct parameter)
+ * @param {string} [params.customerCity] - Customer city (direct parameter)
+ * @param {string} [params.customerZIPCode] - Customer ZIP code (direct parameter)
+ * @param {string} [params.customerAddress] - Customer address (direct parameter)
  * @param {number} params.discount - Optional discount percentage (0-100)
  * @param {number} params.tip - Optional tip amount
  * @param {string} params.currency - Currency code (defaults to config)

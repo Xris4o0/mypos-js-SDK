@@ -1,6 +1,6 @@
 # myPOS Checkout SDK for Node.js
 
-Modern, TypeScript-friendly Node.js SDK for myPOS Checkout API. Generate secure HTML forms for all myPOS payment operations including purchases, refunds, pre-authorizations, and more.
+Modern Node.js SDK for myPOS Checkout API. Generate secure HTML forms for all myPOS payment operations including purchases, refunds, pre-authorizations, and more.
 
 [![npm version](https://img.shields.io/npm/v/@mypos/JS-checkout-SDK.svg)](https://www.npmjs.com/package/@mypos/JS-checkout-SDK)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
@@ -43,20 +43,17 @@ MYPOS_NOTIFY_URL=http://localhost:3000/notify
 const { purchase, refund, getPaymentStatus } = require('@mypos/JS-checkout-SDK');
 
 // Create a purchase
-const { redirectUrl, formHtml } = await purchase({
+const { redirectUrl, rawResponse } = await purchase({
   cart: [
     { name: 'T-shirt', price: 29.99, quantity: 2 },
     { name: 'Shipping', price: 5.00, quantity: 1 }
-  ],
-  customer: {
-    email: 'customer@example.com',
-    firstNames: 'John',
-    familyName: 'Doe'
-  }
+  ]
 });
 
-// Redirect user to payment page or render the form
-console.log(redirectUrl); // https://mypos.com/vmp/checkout/...
+// Send the HTML form to browser (it will auto-submit to myPOS)
+// res.send(rawResponse);
+// Or redirect to the URL
+// res.redirect(redirectUrl);
 ```
 
 ## 📋 Table of Contents
@@ -154,23 +151,67 @@ The SDK will automatically load the appropriate file based on the environment. I
 
 Create a standard purchase request.
 
+**Note:** Customer fields (`email`, `phone`, `firstNames`/`firstName`, `familyName`/`lastName`) are **required** when `PaymentParametersRequired = 1`. They are optional otherwise.
+
+The SDK accepts customer fields in multiple ways:
+- **Nested object**: `customer: {email, phone, firstNames, familyName, ...}`
+- **Direct parameters**: `customerEmail`, `customerPhone`, `customerFirstNames`, `customerFamilyName`, etc.
+- **Flexible naming**: `firstName`/`firstNames` and `lastName`/`familyName` (both work)
+
 ```javascript
 const { purchase } = require('@mypos/JS-checkout-SDK');
 
+// With PaymentParametersRequired = 1 (customer fields required)
+// Option 1: Using nested customer object with firstNames/familyName
 const result = await purchase({
   cart: [
     { name: 'Product A', price: 29.99, quantity: 2 },
     { name: 'Product B', price: 15.50, quantity: 1 }
   ],
+  paymentParametersRequired: 1,
   customer: { 
     email: 'customer@example.com',
+    phone: '+1234567890',
     firstNames: 'John',
-    familyName: 'Doe',
-    phone: '+1234567890'
+    familyName: 'Doe'
   },
-  orderId: 'ORDER-12345', // optional - auto-generated if not provided
+  orderId: 'ORDER-12345',
   currency: 'EUR',
   note: 'Order from website'
+});
+
+// Option 2: Using nested customer object with firstName/lastName
+const result2 = await purchase({
+  cart: [{ name: 'Product', price: 50, quantity: 1 }],
+  paymentParametersRequired: 1,
+  customer: { 
+    email: 'customer@example.com',
+    phone: '+1234567890',
+    firstName: 'John',  // Automatically normalized to firstNames
+    lastName: 'Doe'     // Automatically normalized to familyName
+  }
+});
+
+// Option 3: Using direct parameters
+const result3 = await purchase({
+  cart: [{ name: 'Product', price: 50, quantity: 1 }],
+  paymentParametersRequired: 1,
+  customerEmail: 'customer@example.com',
+  customerPhone: '+1234567890',
+  customerFirstNames: 'John',
+  customerFamilyName: 'Doe'
+});
+
+// Option 4: Mix of nested object and direct parameters (direct parameters override)
+const result4 = await purchase({
+  cart: [{ name: 'Product', price: 50, quantity: 1 }],
+  paymentParametersRequired: 1,
+  customer: { 
+    email: 'customer@example.com',
+    phone: '+1234567890'
+  },
+  customerFirstNames: 'John',  // Overrides customer.firstNames if present
+  customerFamilyName: 'Doe'
 });
 
 // Redirect user to payment
@@ -205,16 +246,34 @@ const result = await purchase({
 
 Purchase using iCard payment method.
 
+**Note:** Requires either `CustomerEmail` OR `CustomerPhone` (at least one must be provided). Phone must be in International Phone Numbers Format (E.123): `(+)(country code)(client number)`.
+
 ```javascript
 const { purchaseByIcard } = require('@mypos/JS-checkout-SDK');
 
+// Option 1: With email (phone optional)
 const result = await purchaseByIcard({
   cart: [
     { name: 'Product', price: 50, quantity: 1 }
   ],
-  customer: { email: 'customer@example.com' }
+  customer: { 
+    email: 'customer@example.com',
+    phone: '+359888123456' // optional when email is provided
+  }
+});
+
+// Option 2: With phone only (email not provided)
+const result2 = await purchaseByIcard({
+  cart: [
+    { name: 'Product', price: 50, quantity: 1 }
+  ],
+  customer: { 
+    phone: '+359888123456' // required when email is not provided
+  }
 });
 ```
+<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
+read_file
 
 ### Refund & Reversal
 
@@ -378,16 +437,13 @@ Securely store card details for future use.
 const { iaStoreCard } = require('@mypos/JS-checkout-SDK');
 
 const result = await iaStoreCard({
-  customer: {
-    email: 'customer@example.com',
-    firstNames: 'John',
-    familyName: 'Doe'
-  },
   currency: 'EUR'
 });
 
 // After user completes card storage, you'll receive a cardToken
 ```
+<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
+read_file
 
 #### Update Stored Card
 
@@ -396,9 +452,6 @@ const { iaStoreCardUpdate } = require('@mypos/JS-checkout-SDK');
 
 const result = await iaStoreCardUpdate({
   cardToken: 'stored_card_token_here',
-  customer: {
-    email: 'customer@example.com'
-  },
   currency: 'EUR'
 });
 ```
@@ -412,10 +465,7 @@ const result = await iaPurchase({
   cardToken: 'stored_card_token_here',
   cart: [
     { name: 'Subscription', price: 29.99, quantity: 1 }
-  ],
-  customer: {
-    email: 'customer@example.com'
-  }
+  ]
 });
 ```
 
@@ -428,10 +478,7 @@ const result = await iaPreAuthorization({
   cardToken: 'stored_card_token_here',
   cart: [
     { name: 'Booking', price: 100, quantity: 1 }
-  ],
-  customer: {
-    email: 'customer@example.com'
-  }
+  ]
 });
 ```
 
@@ -496,11 +543,26 @@ These operations handle callbacks from myPOS after payment operations. They're t
 
 Handle successful purchase callback.
 
+**Note:** Customer fields (`email`, `phone`, `firstNames`, `familyName`) are **required** when `PaymentParametersRequired = 1` or `2`.
+
 ```javascript
 const { purchaseOK } = require('@mypos/JS-checkout-SDK');
 
+// Without PaymentParametersRequired (no customer fields needed)
 const result = await purchaseOK({
   transactionId: '12345678923'
+});
+
+// With PaymentParametersRequired = 1 or 2 (customer fields required)
+const result2 = await purchaseOK({
+  transactionId: '12345678923',
+  paymentParametersRequired: 1,
+  customer: {
+    email: 'customer@example.com',
+    phone: '+1234567890',
+    firstNames: 'John',
+    familyName: 'Doe'
+  }
 });
 ```
 
@@ -520,13 +582,30 @@ const result = await purchaseCancel({
 
 Handle purchase notification callback (server-to-server).
 
+**Note:** Customer fields (`email`, `phone`, `firstNames`, `familyName`) are **required** when `PaymentParametersRequired = 1` or `2`.
+
 ```javascript
 const { purchaseNotify } = require('@mypos/JS-checkout-SDK');
 
+// Without PaymentParametersRequired (no customer fields needed)
 const result = await purchaseNotify({
   transactionId: '12345678923'
 });
+
+// With PaymentParametersRequired = 1 or 2 (customer fields required)
+const result2 = await purchaseNotify({
+  transactionId: '12345678923',
+  paymentParametersRequired: 1,
+  customer: {
+    email: 'customer@example.com',
+    phone: '+1234567890',
+    firstNames: 'John',
+    familyName: 'Doe'
+  }
+});
 ```
+<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
+read_file
 
 #### Pre-Authorization Callbacks
 
@@ -591,10 +670,7 @@ const { paymentSessionCreate } = require('@mypos/JS-checkout-SDK');
 const result = await paymentSessionCreate({
   cart: [
     { name: 'Product', price: 50, quantity: 1 }
-  ],
-  customer: {
-    email: 'customer@example.com'
-  }
+  ]
 });
 ```
 
@@ -605,16 +681,13 @@ All operations return a consistent response object:
 ```javascript
 {
   redirectUrl: 'https://mypos.com/vmp/checkout/...',
-  formHtml: '<form method="POST" action="...">...</form>',
-  rawResponse: {
-    // Raw IPC parameters that were sent
-    IPCmethod: 'IPCPurchase',
-    Amount: '50.00',
-    Currency: 'EUR',
-    // ... all other parameters
-  }
+  rawResponse: '<html><body onload="document.ipcForm.submit()"><form id="ipcForm" name="ipcForm" action="https://www.mypos.com/vmp/checkout-test" method="post">...</form></body></html>'
 }
 ```
+
+**Response Properties**:
+- `redirectUrl` - The myPOS checkout URL where the form will be submitted
+- `rawResponse` - Complete HTML form that auto-submits to myPOS (send this to the browser)
 
 ### Handling Callbacks
 
@@ -643,7 +716,7 @@ app.get('/payment/success', (req, res) => {
 });
 ```
 
-**Important:** Always verify the signature of incoming callbacks to prevent fraud. See `src/EXAMPLE_USAGE.md` for signature verification examples.
+**Important:** Always verify the signature of incoming callbacks to prevent fraud. See `src/DOCUMENTATION.md` for more details.
 
 ## ⚠️ Error Handling
 
@@ -703,11 +776,7 @@ The sandbox environment uses test card numbers and doesn't process real payments
 
 ## 📚 Documentation
 
-- **[src/README.md](src/README.md)** - Detailed SDK documentation
-- **[src/DOCUMENTATION.md](src/DOCUMENTATION.md)** - Complete API reference
-- **[src/EXAMPLE_USAGE.md](src/EXAMPLE_USAGE.md)** - Real-world examples
-- **[src/QUICK_START.md](src/QUICK_START.md)** - Quick start guide
-- **[src/FLOW_DOCUMENTATION.md](src/FLOW_DOCUMENTATION.md)** - Request flow explanation
+- **[src/DOCUMENTATION.md](src/DOCUMENTATION.md)** - Complete technical documentation and API reference
 
 ## 🏗️ Architecture
 

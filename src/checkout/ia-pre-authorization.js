@@ -36,14 +36,6 @@ class IAPreAuthorizationRequest extends CheckoutRequest {
       CartItems: cartItems.length
     };
     
-    // Add customer details if provided
-    if (params.customer) {
-      ipcParams.CustomerEmail = params.customer.email;
-      ipcParams.CustomerFirstNames = params.customer.firstNames;
-      ipcParams.CustomerFamilyName = params.customer.familyName;
-      ipcParams.CustomerPhone = params.customer.phone;
-    }
-    
     // Add cart items
     cartItems.forEach((item, index) => {
       const num = index + 1;

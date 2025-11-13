@@ -33,12 +33,22 @@ class PurchaseByIcardRequest extends CheckoutRequest {
       CartItems: cartItems.length
     };
     
-    // Add customer details if provided
+    // IPCPurchaseByIcard needs CustomerEmail if no CustomerPhone is provided
+    // CustomerPhone is required when CustomerEmail is not provided
+    // Must be in International Phone Numbers Format (E.123): (+)(country code)(client number)
     if (params.customer) {
-      ipcParams.CustomerEmail = params.customer.email;
-      ipcParams.CustomerFirstNames = params.customer.firstNames;
-      ipcParams.CustomerFamilyName = params.customer.familyName;
-      ipcParams.CustomerPhone = params.customer.phone;
+      if (params.customer.email) {
+        ipcParams.CustomerEmail = params.customer.email;
+        // CustomerPhone is optional when CustomerEmail is provided
+        if (params.customer.phone) {
+          ipcParams.CustomerPhone = params.customer.phone;
+        }
+      } else if (params.customer.phone) {
+        // CustomerPhone is required when CustomerEmail is not provided
+        ipcParams.CustomerPhone = params.customer.phone;
+      } else {
+        throw new Error('IPCPurchaseByIcard requires either CustomerEmail or CustomerPhone');
+      }
     }
     
     // Add cart items

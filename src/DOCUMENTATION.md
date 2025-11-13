@@ -381,7 +381,7 @@ Browser Auto-Submits to myPOS
 // User friendly
 {
   cart: [{name, price, quantity}],
-  customer: {email, firstName, ...},
+  customer: {email, firstNames, familyName, ...},
   discount: 10,
   tip: 15
 }
@@ -831,9 +831,6 @@ const config = {
 
 ## Additional Resources
 
-- **User Documentation**: See `src/README.md`
-- **Flow Documentation**: See `src/FLOW_DOCUMENTATION.md`
-- **Implementation Summary**: See `src/IMPLEMENTATION_SUMMARY.md`
 - **Tests**: See `src/__tests__/`
 - **myPOS Developer Portal**: https://developers.mypos.eu/
 
