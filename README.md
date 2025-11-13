@@ -50,8 +50,8 @@ const { redirectUrl, formHtml } = await purchase({
   ],
   customer: {
     email: 'customer@example.com',
-    firstName: 'John',
-    lastName: 'Doe'
+    firstNames: 'John',
+    familyName: 'Doe'
   }
 });
 
@@ -70,6 +70,7 @@ console.log(redirectUrl); // https://mypos.com/vmp/checkout/...
   - [In-App (IA) Operations](#in-app-ia-operations)
   - [Money Transfer](#money-transfer)
   - [Payment Status](#payment-status)
+  - [Callback Operations](#callback-operations)
   - [Advanced Operations](#advanced-operations)
 - [Response Handling](#-response-handling)
 - [Error Handling](#-error-handling)
@@ -137,12 +138,13 @@ await purchase({
 Alternatively, store private keys in `.pem` files:
 
 ```
-private_key_sandbox.pem
-private_key_demo.pem
-private_key_production.pem
+private_key.pem                    # Fallback for all environments
+private_key_sandbox.pem            # Sandbox-specific
+private_key_demo.pem               # Demo-specific
+private_key_production.pem         # Production-specific
 ```
 
-The SDK will automatically load the appropriate file based on the environment.
+The SDK will automatically load the appropriate file based on the environment. It first checks for environment-specific files (e.g., `private_key_sandbox.pem`), then falls back to `private_key.pem` if no environment-specific file is found.
 
 ## 📖 API Reference
 
@@ -162,8 +164,8 @@ const result = await purchase({
   ],
   customer: { 
     email: 'customer@example.com',
-    firstName: 'John',
-    lastName: 'Doe',
+    firstNames: 'John',
+    familyName: 'Doe',
     phone: '+1234567890'
   },
   orderId: 'ORDER-12345', // optional - auto-generated if not provided
@@ -378,8 +380,8 @@ const { iaStoreCard } = require('@mypos/JS-checkout-SDK');
 const result = await iaStoreCard({
   customer: {
     email: 'customer@example.com',
-    firstName: 'John',
-    lastName: 'Doe'
+    firstNames: 'John',
+    familyName: 'Doe'
   },
   currency: 'EUR'
 });
@@ -482,6 +484,86 @@ const result = await getPaymentStatus({
 });
 
 console.log(result); // Contains transaction status and details
+```
+
+### Callback Operations
+
+These operations handle callbacks from myPOS after payment operations. They're typically used to process server-to-server notifications or handle redirect responses.
+
+#### Purchase Callbacks
+
+##### Purchase OK
+
+Handle successful purchase callback.
+
+```javascript
+const { purchaseOK } = require('@mypos/JS-checkout-SDK');
+
+const result = await purchaseOK({
+  transactionId: '12345678923'
+});
+```
+
+##### Purchase Cancel
+
+Handle cancelled purchase callback.
+
+```javascript
+const { purchaseCancel } = require('@mypos/JS-checkout-SDK');
+
+const result = await purchaseCancel({
+  transactionId: '12345678923'
+});
+```
+
+##### Purchase Notify
+
+Handle purchase notification callback (server-to-server).
+
+```javascript
+const { purchaseNotify } = require('@mypos/JS-checkout-SDK');
+
+const result = await purchaseNotify({
+  transactionId: '12345678923'
+});
+```
+
+#### Pre-Authorization Callbacks
+
+##### Pre-Authorization OK
+
+Handle successful pre-authorization callback.
+
+```javascript
+const { preAuthorizationOK } = require('@mypos/JS-checkout-SDK');
+
+const result = await preAuthorizationOK({
+  transactionId: '12345678923'
+});
+```
+
+##### Pre-Authorization Cancel
+
+Handle cancelled pre-authorization callback.
+
+```javascript
+const { preAuthorizationCancel } = require('@mypos/JS-checkout-SDK');
+
+const result = await preAuthorizationCancel({
+  transactionId: '12345678923'
+});
+```
+
+##### Pre-Authorization Notify
+
+Handle pre-authorization notification callback (server-to-server).
+
+```javascript
+const { preAuthorizationNotify } = require('@mypos/JS-checkout-SDK');
+
+const result = await preAuthorizationNotify({
+  transactionId: '12345678923'
+});
 ```
 
 ### Advanced Operations
@@ -692,6 +774,11 @@ Complete list of all 28 checkout operations:
 - `iaPurchase` - Purchase with stored card
 - `purchaseRollback` - Rollback a purchase
 
+**Purchase Callbacks:**
+- `purchaseOK` - Handle successful purchase callback
+- `purchaseCancel` - Handle cancelled purchase callback
+- `purchaseNotify` - Handle purchase notification callback
+
 **Refund & Reversal:**
 - `refund` - Refund a transaction
 - `reversal` - Reverse a transaction
@@ -702,6 +789,11 @@ Complete list of all 28 checkout operations:
 - `preAuthCancellation` - Cancel pre-authorization
 - `preAuthStatus` - Check pre-authorization status
 - `iaPreAuthorization` - Pre-auth with stored card
+
+**Pre-Authorization Callbacks:**
+- `preAuthorizationOK` - Handle successful pre-authorization callback
+- `preAuthorizationCancel` - Handle cancelled pre-authorization callback
+- `preAuthorizationNotify` - Handle pre-authorization notification callback
 
 **Authorization:**
 - `authorization` - Create authorization
