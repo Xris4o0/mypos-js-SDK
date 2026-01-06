@@ -77,7 +77,7 @@ class PurchaseByIcardRequest extends CheckoutRequest {
 async function purchaseByIcard(params = {}) {
   const config = loadConfig(params);
   const request = new PurchaseByIcardRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = purchaseByIcard;

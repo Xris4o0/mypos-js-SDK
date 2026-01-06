@@ -60,7 +60,7 @@ class PurchaseNotifyRequest extends CheckoutRequest {
 async function purchaseNotify(params = {}) {
   const config = loadConfig(params);
   const request = new PurchaseNotifyRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = purchaseNotify;

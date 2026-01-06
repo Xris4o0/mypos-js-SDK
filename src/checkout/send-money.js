@@ -54,7 +54,7 @@ class SendMoneyRequest extends CheckoutRequest {
 async function sendMoney(params = {}) {
   const config = loadConfig(params);
   const request = new SendMoneyRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = sendMoney;

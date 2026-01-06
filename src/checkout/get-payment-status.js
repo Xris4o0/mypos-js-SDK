@@ -38,7 +38,7 @@ class GetPaymentStatusRequest extends CheckoutRequest {
 async function getPaymentStatus(params = {}) {
   const config = loadConfig(params);
   const request = new GetPaymentStatusRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = getPaymentStatus;

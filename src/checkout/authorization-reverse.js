@@ -41,7 +41,7 @@ class AuthorizationReverseRequest extends CheckoutRequest {
 async function authorizationReverse(params = {}) {
   const config = loadConfig(params);
   const request = new AuthorizationReverseRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = authorizationReverse;

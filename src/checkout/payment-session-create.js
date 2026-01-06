@@ -59,7 +59,7 @@ class PaymentSessionCreateRequest extends CheckoutRequest {
 async function paymentSessionCreate(params = {}) {
   const config = loadConfig(params);
   const request = new PaymentSessionCreateRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = paymentSessionCreate;

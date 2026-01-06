@@ -46,7 +46,7 @@ class PreAuthCompletionRequest extends CheckoutRequest {
 async function preAuthCompletion(params = {}) {
   const config = loadConfig(params);
   const request = new PreAuthCompletionRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = preAuthCompletion;

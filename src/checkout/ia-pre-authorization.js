@@ -63,7 +63,7 @@ class IAPreAuthorizationRequest extends CheckoutRequest {
 async function iaPreAuthorization(params = {}) {
   const config = loadConfig(params);
   const request = new IAPreAuthorizationRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = iaPreAuthorization;

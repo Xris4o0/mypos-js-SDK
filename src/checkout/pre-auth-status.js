@@ -38,7 +38,7 @@ class PreAuthStatusRequest extends CheckoutRequest {
 async function preAuthStatus(params = {}) {
   const config = loadConfig(params);
   const request = new PreAuthStatusRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = preAuthStatus;

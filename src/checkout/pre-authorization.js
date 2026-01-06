@@ -55,7 +55,7 @@ class PreAuthorizationRequest extends CheckoutRequest {
 async function preAuthorization(params = {}) {
   const config = loadConfig(params);
   const request = new PreAuthorizationRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = preAuthorization;

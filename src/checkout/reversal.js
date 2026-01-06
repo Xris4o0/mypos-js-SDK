@@ -38,7 +38,7 @@ class ReversalRequest extends CheckoutRequest {
 async function reversal(params = {}) {
   const config = loadConfig(params);
   const request = new ReversalRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = reversal;

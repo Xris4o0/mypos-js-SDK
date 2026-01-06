@@ -42,7 +42,7 @@ class MandateManagementRequest extends CheckoutRequest {
 async function mandateManagement(params = {}) {
   const config = loadConfig(params);
   const request = new MandateManagementRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = mandateManagement;

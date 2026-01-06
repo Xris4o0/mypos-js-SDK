@@ -34,7 +34,7 @@ class PreAuthorizationCancelRequest extends CheckoutRequest {
 async function preAuthorizationCancel(params = {}) {
   const config = loadConfig(params);
   const request = new PreAuthorizationCancelRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = preAuthorizationCancel;

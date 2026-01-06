@@ -39,25 +39,39 @@ function generateSignature(params, privateKey) {
 }
 
 /**
+ * Escape HTML attribute value
+ * @private
+ * @param {string} str - String to escape
+ * @returns {string} Escaped string
+ */
+function escapeHtmlAttribute(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
  * Generate HTML form with auto-submit
  * @param {string} url - Action URL for the form
  * @param {Object} params - Form parameters (including signature)
  * @returns {string} HTML form string
  */
 function generateForm(url, params) {
+  // Escape URL for HTML attribute
+  const escapedUrl = escapeHtmlAttribute(url);
+  
   let html = '<html><body onload="document.ipcForm.submit()">';
-  html += `<form id="ipcForm" name="ipcForm" action="${url}" method="post">`;
+  html += `<form id="ipcForm" name="ipcForm" action="${escapedUrl}" method="post">`;
   
   for (const [key, value] of Object.entries(params)) {
-    // Escape HTML special characters in values
-    const escapedValue = String(value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+    // Escape HTML special characters in attribute names and values
+    const escapedKey = escapeHtmlAttribute(key);
+    const escapedValue = escapeHtmlAttribute(value);
     
-    html += `<input type="hidden" name="${key}" value="${escapedValue}"/><br>`;
+    html += `<input type="hidden" name="${escapedKey}" value="${escapedValue}"/><br>`;
   }
   
   html += '</form></body></html>';

@@ -46,7 +46,7 @@ class RefundRequest extends CheckoutRequest {
 async function refund(params = {}) {
   const config = loadConfig(params);
   const request = new RefundRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = refund;

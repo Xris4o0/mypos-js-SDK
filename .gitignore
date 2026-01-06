@@ -6,3 +6,4 @@ private_key.txt
 *.pem
 *.tgz
 builds/
+.coverage

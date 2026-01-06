@@ -41,7 +41,7 @@ class PurchaseRollbackRequest extends CheckoutRequest {
 async function purchaseRollback(params = {}) {
   const config = loadConfig(params);
   const request = new PurchaseRollbackRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = purchaseRollback;

@@ -46,7 +46,7 @@ class AuthorizationCaptureRequest extends CheckoutRequest {
 async function authorizationCapture(params = {}) {
   const config = loadConfig(params);
   const request = new AuthorizationCaptureRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = authorizationCapture;

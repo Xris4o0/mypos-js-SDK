@@ -31,7 +31,7 @@
   "dependencies": {
     "node-rsa": "^1.0.6",
     "uuid": "^11.1.0",
-    "dotenv": "^16.5.0"
+    "zod": "^3.22.4"
   },
   "repository": {
     "type": "git",
@@ -43,7 +43,10 @@
   "homepage": "https://github.com/developermypos/mypos-js#readme",
   "devDependencies": {
     "jest": "^29.0.0",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "dotenv": "^16.5.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5"
   },
   "files": [
     "src",

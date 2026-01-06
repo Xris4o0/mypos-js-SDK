@@ -34,7 +34,7 @@ class PreAuthorizationNotifyRequest extends CheckoutRequest {
 async function preAuthorizationNotify(params = {}) {
   const config = loadConfig(params);
   const request = new PreAuthorizationNotifyRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = preAuthorizationNotify;

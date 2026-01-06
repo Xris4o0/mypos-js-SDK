@@ -62,7 +62,7 @@ class RequestMoneyRequest extends CheckoutRequest {
 async function requestMoney(params = {}) {
   const config = loadConfig(params);
   const request = new RequestMoneyRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = requestMoney;

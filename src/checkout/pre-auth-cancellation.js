@@ -41,7 +41,7 @@ class PreAuthCancellationRequest extends CheckoutRequest {
 async function preAuthCancellation(params = {}) {
   const config = loadConfig(params);
   const request = new PreAuthCancellationRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = preAuthCancellation;

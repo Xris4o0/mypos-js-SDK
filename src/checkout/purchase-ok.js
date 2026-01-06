@@ -60,7 +60,7 @@ class PurchaseOKRequest extends CheckoutRequest {
 async function purchaseOK(params = {}) {
   const config = loadConfig(params);
   const request = new PurchaseOKRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = purchaseOK;

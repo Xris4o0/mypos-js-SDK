@@ -34,7 +34,7 @@ class PurchaseCancelRequest extends CheckoutRequest {
 async function purchaseCancel(params = {}) {
   const config = loadConfig(params);
   const request = new PurchaseCancelRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = purchaseCancel;

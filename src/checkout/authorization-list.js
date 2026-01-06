@@ -34,7 +34,7 @@ class AuthorizationListRequest extends CheckoutRequest {
 async function authorizationList(params = {}) {
   const config = loadConfig(params);
   const request = new AuthorizationListRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = authorizationList;

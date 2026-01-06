@@ -47,7 +47,7 @@ class IAStoreCardUpdateRequest extends CheckoutRequest {
 async function iaStoreCardUpdate(params = {}) {
   const config = loadConfig(params);
   const request = new IAStoreCardUpdateRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = iaStoreCardUpdate;

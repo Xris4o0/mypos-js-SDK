@@ -127,7 +127,7 @@ class PurchaseRequest extends CheckoutRequest {
 async function purchase(params = {}) {
   const config = loadConfig(params);
   const request = new PurchaseRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = purchase;

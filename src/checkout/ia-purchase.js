@@ -63,7 +63,7 @@ class IAPurchaseRequest extends CheckoutRequest {
 async function iaPurchase(params = {}) {
   const config = loadConfig(params);
   const request = new IAPurchaseRequest(config, params);
-  return await request.execute();
+  return request.execute();
 }
 
 module.exports = iaPurchase;
