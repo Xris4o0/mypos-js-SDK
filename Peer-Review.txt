@@ -1,0 +1,49 @@
+### General
+- code styling (eslint, prettier), gitignore, .env, .coverage
+- ts definitions ??
+- dotenv - dev deps
+- input validation (zod, arktype etc)
+- return await request.execute();
+
+### checkout-request.js
+- input params mutation
+
+const paramsWithSignature = {
+  ...this.params,
+  Signature: signature
+};
+const rawResponse = generateForm(redirectUrl, paramsWithSignature);
+
+- check for error type using instanceof
+if (error.name && error.name.startsWith('MyPOS')) {
+  throw error;
+}
+if (error instanceof MyPOSError) {
+  throw error;
+}
+
+- constructor validation (config, ipcParams)
+- env URLs
+const ENVIRONMENT_URLS = {
+  demo: 'https://demo.mypos.eu/vmp/checkout',
+  sandbox: 'https://www.mypos.com/vmp/checkout-test',
+  production: 'https://www.mypos.com/vmp/checkout'
+};
+
+getHost() {
+  const env = this.config.environment;
+  const url = ENVIRONMENT_URLS[env];
+
+  if (!url) {
+    throw new MyPOSConfigError(
+      `Unknown environment: ${env}. Valid options: ${Object.keys(ENVIRONMENT_URLS).join(', ')}`
+    );
+  }
+
+  return url;
+}
+
+### signature.js
+- escape url and input param
+
+ 
