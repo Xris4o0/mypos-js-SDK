@@ -1,53 +1,99 @@
 'use strict';
 
+const { z } = require('zod');
 const { MyPOSConfigError, MyPOSValidationError } = require('../core/errors');
+
+// Zod schemas
+const environmentSchema = z.enum(['sandbox', 'production', 'demo']);
+
+const configSchema = z.object({
+  environment: environmentSchema,
+  sid: z.string().min(1, 'MYPOS_SID is required'),
+  clientNumber: z.string().min(1, 'MYPOS_CLIENT_NUMBER is required'),
+  privateKey: z
+    .string()
+    .min(1, 'MYPOS_PRIVATE_KEY is required')
+    .refine(
+      (key) => key.includes('BEGIN') && key.includes('PRIVATE KEY'),
+      {
+        message: 'Invalid private key format. Expected PEM format starting with -----BEGIN PRIVATE KEY-----'
+      }
+    ),
+  currency: z.string().optional(),
+  lang: z.string().optional(),
+  version: z.string().optional(),
+  successUrl: z.string().optional(),
+  cancelUrl: z.string().optional(),
+  notifyUrl: z.string().optional(),
+  keyIndex: z.union([z.number(), z.string().transform((val) => Number(val))]).optional(),
+  cardTokenRequest: z.union([z.number(), z.string().transform((val) => Number(val))]).optional(),
+  paymentMethod: z.union([z.number(), z.string().transform((val) => Number(val))]).optional(),
+  paymentParametersRequired: z.union([z.number(), z.string().transform((val) => Number(val))]).optional(),
+  onBeforeSign: z.any().optional(), // Function type - validated at runtime
+  onAfterSign: z.any().optional(), // Function type - validated at runtime
+  onError: z.any().optional() // Function type - validated at runtime
+}).passthrough(); // Allow additional properties
+
+const cartItemSchema = z.object({
+  name: z.string().min(1, 'Cart item name is required'),
+  price: z.number().positive('Cart item price must be greater than 0'),
+  quantity: z.number().int().positive('Cart item quantity must be greater than 0')
+});
+
+const cartSchema = z
+  .array(cartItemSchema)
+  .min(1, 'Cart must contain at least one item');
+
+const customerSchema = z.object({
+  email: z.string().email('Invalid email format').optional(),
+  phone: z.string().optional(),
+  firstName: z.string().optional(),
+  firstNames: z.string().optional(),
+  lastName: z.string().optional(),
+  familyName: z.string().optional(),
+  address: z.string().optional()
+}).passthrough();
+
+const amountSchema = z.number().positive('Amount must be greater than 0').finite('Amount must be a finite number');
+
+const currencySchema = z.string().length(3, 'Currency must be a 3-letter code (e.g., EUR, USD)');
+
+const transactionIdSchema = z.string().min(1, 'Transaction ID is required');
 
 /**
  * Validates the complete configuration object
  * @param {Object} config - Configuration to validate
- * @throws {MyPOSConfigError} If required fields are missing
+ * @throws {MyPOSConfigError} If required fields are missing or invalid
  */
 function validateConfig(config) {
-  const environment = config.environment || 'sandbox';
-  
-  // Required fields
-  if (!config.sid) {
-    throw new MyPOSConfigError(
-      `MYPOS_SID is required for environment: ${environment}. ` +
-      `Set it in .env as MYPOS_SID_${environment.toUpperCase()} or in config file.`
-    );
+  try {
+    // Validate the config as-is (already merged with defaults)
+    configSchema.parse(config);
+    return true;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const environment = config?.environment || 'sandbox';
+      const firstError = error.errors[0];
+      const field = firstError.path.join('.');
+      
+      // Provide helpful error messages for required fields
+      if (field === 'sid' || field === 'clientNumber' || field === 'privateKey') {
+        const fieldName = field === 'sid' ? 'SID' : 
+                         field === 'clientNumber' ? 'CLIENT_NUMBER' : 
+                         'PRIVATE_KEY';
+        // Match test expectations: "SID is required" should be in the message
+        throw new MyPOSConfigError(
+          `${fieldName} is required for environment: ${environment}. ` +
+          `Set it in .env as MYPOS_${fieldName}_${environment.toUpperCase()} or in config file.`
+        );
+      }
+      
+      throw new MyPOSConfigError(
+        firstError.message || `Invalid configuration: ${field}`
+      );
+    }
+    throw error;
   }
-  
-  if (!config.clientNumber) {
-    throw new MyPOSConfigError(
-      `MYPOS_CLIENT_NUMBER is required for environment: ${environment}. ` +
-      `Set it in .env as MYPOS_CLIENT_NUMBER_${environment.toUpperCase()} or in config file.`
-    );
-  }
-  
-  if (!config.privateKey) {
-    throw new MyPOSConfigError(
-      `MYPOS_PRIVATE_KEY is required for environment: ${environment}. ` +
-      `Set it in .env, mypos.config.js, or create a private_key.pem file.`
-    );
-  }
-  
-  // Validate environment
-  const validEnvironments = ['sandbox', 'production', 'demo'];
-  if (!validEnvironments.includes(config.environment)) {
-    throw new MyPOSConfigError(
-      `Invalid environment: ${config.environment}. Must be one of: ${validEnvironments.join(', ')}`
-    );
-  }
-  
-  // Validate private key format (should start with BEGIN RSA PRIVATE KEY or BEGIN PRIVATE KEY)
-  if (!config.privateKey.includes('BEGIN') || !config.privateKey.includes('PRIVATE KEY')) {
-    throw new MyPOSConfigError(
-      'Invalid private key format. Expected PEM format starting with -----BEGIN PRIVATE KEY-----'
-    );
-  }
-  
-  return true;
 }
 
 /**
@@ -56,45 +102,20 @@ function validateConfig(config) {
  * @throws {MyPOSValidationError} If cart is invalid
  */
 function validateCart(cart) {
-  if (!Array.isArray(cart)) {
-    throw new MyPOSValidationError('cart must be an array', 'cart');
+  try {
+    cartSchema.parse(cart);
+    return true;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const firstError = error.errors[0];
+      const path = firstError.path.join('.');
+      throw new MyPOSValidationError(
+        firstError.message || `Invalid cart: ${path}`,
+        path || 'cart'
+      );
+    }
+    throw error;
   }
-  
-  if (cart.length === 0) {
-    throw new MyPOSValidationError('cart must contain at least one item', 'cart');
-  }
-  
-  cart.forEach((item, index) => {
-    if (!item.name) {
-      throw new MyPOSValidationError(
-        `Cart item at index ${index} is missing "name"`,
-        `cart[${index}].name`
-      );
-    }
-    
-    if (typeof item.price !== 'number') {
-      throw new MyPOSValidationError(
-        `Cart item at index ${index} must have numeric "price"`,
-        `cart[${index}].price`
-      );
-    }
-    
-    if (typeof item.quantity !== 'number') {
-      throw new MyPOSValidationError(
-        `Cart item at index ${index} must have numeric "quantity"`,
-        `cart[${index}].quantity`
-      );
-    }
-    
-    if (item.quantity <= 0) {
-      throw new MyPOSValidationError(
-        `Cart item at index ${index} quantity must be greater than 0`,
-        `cart[${index}].quantity`
-      );
-    }
-  });
-  
-  return true;
 }
 
 /**
@@ -110,17 +131,27 @@ function validateCustomer(customer, emailRequired = false) {
     }
     return true;
   }
-  
-  if (emailRequired && !customer.email) {
-    throw new MyPOSValidationError('customer.email is required', 'customer.email');
+
+  try {
+    const schema = emailRequired
+      ? customerSchema.extend({
+          email: z.string().email('Invalid email format').min(1, 'Email is required')
+        })
+      : customerSchema;
+    
+    schema.parse(customer);
+    return true;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const firstError = error.errors[0];
+      const field = firstError.path.join('.') || 'customer';
+      throw new MyPOSValidationError(
+        firstError.message || `Invalid customer: ${field}`,
+        field
+      );
+    }
+    throw error;
   }
-  
-  // Validate email format if provided
-  if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) {
-    throw new MyPOSValidationError('customer.email has invalid format', 'customer.email');
-  }
-  
-  return true;
 }
 
 /**
@@ -130,19 +161,19 @@ function validateCustomer(customer, emailRequired = false) {
  * @throws {MyPOSValidationError} If amount is invalid
  */
 function validateAmount(amount, field = 'amount') {
-  if (typeof amount !== 'number') {
-    throw new MyPOSValidationError(`${field} must be a number`, field);
+  try {
+    amountSchema.parse(amount);
+    return true;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const firstError = error.errors[0];
+      throw new MyPOSValidationError(
+        firstError.message || `${field} is invalid`,
+        field
+      );
+    }
+    throw error;
   }
-  
-  if (amount <= 0) {
-    throw new MyPOSValidationError(`${field} must be greater than 0`, field);
-  }
-  
-  if (!Number.isFinite(amount)) {
-    throw new MyPOSValidationError(`${field} must be a finite number`, field);
-  }
-  
-  return true;
 }
 
 /**
@@ -151,15 +182,19 @@ function validateAmount(amount, field = 'amount') {
  * @throws {MyPOSValidationError} If currency is invalid
  */
 function validateCurrency(currency) {
-  if (typeof currency !== 'string') {
-    throw new MyPOSValidationError('currency must be a string', 'currency');
+  try {
+    currencySchema.parse(currency);
+    return true;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const firstError = error.errors[0];
+      throw new MyPOSValidationError(
+        firstError.message || 'Currency is invalid',
+        'currency'
+      );
+    }
+    throw error;
   }
-  
-  if (currency.length !== 3) {
-    throw new MyPOSValidationError('currency must be a 3-letter code (e.g., EUR, USD)', 'currency');
-  }
-  
-  return true;
 }
 
 /**
@@ -168,15 +203,19 @@ function validateCurrency(currency) {
  * @throws {MyPOSValidationError} If transaction ID is invalid
  */
 function validateTransactionId(transactionId) {
-  if (!transactionId) {
-    throw new MyPOSValidationError('transactionId is required', 'transactionId');
+  try {
+    transactionIdSchema.parse(transactionId);
+    return true;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const firstError = error.errors[0];
+      throw new MyPOSValidationError(
+        firstError.message || 'Transaction ID is invalid',
+        'transactionId'
+      );
+    }
+    throw error;
   }
-  
-  if (typeof transactionId !== 'string') {
-    throw new MyPOSValidationError('transactionId must be a string', 'transactionId');
-  }
-  
-  return true;
 }
 
 module.exports = {
@@ -187,4 +226,3 @@ module.exports = {
   validateCurrency,
   validateTransactionId
 };
-

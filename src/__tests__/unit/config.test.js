@@ -6,10 +6,14 @@ const { MyPOSConfigError } = require('../../core/errors');
 describe('Config Loader', () => {
   beforeEach(() => {
     clearCache();
-    // Clear environment variables
-    delete process.env.MYPOS_SID;
-    delete process.env.MYPOS_CLIENT_NUMBER;
-    delete process.env.MYPOS_PRIVATE_KEY;
+    // Clear environment variables (including environment-specific ones)
+    const envVarsToClear = [
+      'MYPOS_SID', 'MYPOS_CLIENT_NUMBER', 'MYPOS_PRIVATE_KEY',
+      'MYPOS_SID_SANDBOX', 'MYPOS_CLIENT_NUMBER_SANDBOX', 'MYPOS_PRIVATE_KEY_SANDBOX',
+      'MYPOS_SID_PRODUCTION', 'MYPOS_CLIENT_NUMBER_PRODUCTION', 'MYPOS_PRIVATE_KEY_PRODUCTION',
+      'MYPOS_SID_DEMO', 'MYPOS_CLIENT_NUMBER_DEMO', 'MYPOS_PRIVATE_KEY_DEMO'
+    ];
+    envVarsToClear.forEach(key => delete process.env[key]);
   });
   
   test('should load config with all required fields', () => {

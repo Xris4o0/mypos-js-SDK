@@ -23,14 +23,23 @@ let cachedConfig = null;
  * @returns {Object} Merged and validated configuration
  */
 function loadConfig(params = {}) {
-  // If params include all required fields, skip caching and just merge
-  if (params.sid && params.clientNumber && params.privateKey) {
+  // Filter out undefined values from params (they shouldn't overwrite defaults)
+  const cleanParams = Object.fromEntries(
+    Object.entries(params).filter(([_, value]) => value !== undefined)
+  );
+  
+  // If params include all required fields, skip file/env loading and just merge
+  if (cleanParams.sid && cleanParams.clientNumber && cleanParams.privateKey) {
     const merged = {
       ...defaults,
-      ...params,
-      environment: params.environment || defaults.environment
+      ...cleanParams,
+      environment: cleanParams.environment || defaults.environment
     };
     validateConfig(merged);
+    
+    // Cache the result (will be used if loadConfig() is called with no params later)
+    cachedConfig = merged;
+    
     return merged;
   }
   
@@ -44,7 +53,7 @@ function loadConfig(params = {}) {
   
   // Determine environment
   const environment = (
-    params.environment ||
+    cleanParams.environment ||
     fileConfig.environment ||
     process.env.MYPOS_ENVIRONMENT ||
     defaults.environment
@@ -53,12 +62,12 @@ function loadConfig(params = {}) {
   // Load from environment variables
   const envConfig = loadEnvConfig(environment);
   
-  // Merge all sources: defaults < file < env < params
+  // Merge all sources: defaults < file < env < params (excluding undefined values)
   const merged = {
     ...defaults,
     ...fileConfig,
     ...envConfig,
-    ...params,
+    ...cleanParams,
     environment
   };
   

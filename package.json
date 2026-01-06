@@ -1,6 +1,6 @@
 {
   "name": "@mypos/JS-checkout-SDK",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "description": "Modern NodeJS SDK for myPOS Checkout API. Supports all checkout operations including purchase, refund, pre-authorization, and more.",
   "main": "src/index.js",
   "exports": {
