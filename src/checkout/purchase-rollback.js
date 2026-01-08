@@ -2,29 +2,29 @@
 
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
-const { validateTransactionId } = require('../config/validator');
 const { safeVal, generateOrderId } = require('../utils/common');
+const { validateParams, purchaseRollbackSchema } = require('../config/checkout-schemas');
 
 /**
  * Purchase Rollback Request - Rollback a purchase
  */
 class PurchaseRollbackRequest extends CheckoutRequest {
   constructor(config, params) {
-    // Validate required fields
-    validateTransactionId(params.transactionId);
+    // Validate params with Zod schema
+    const validatedParams = validateParams(purchaseRollbackSchema, params, 'Purchase Rollback');
     
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCPurchaseRollback',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      IPC_Trnref: params.transactionId,
-      OrderID: safeVal(params.orderId, generateOrderId()),
-      OutputFormat: safeVal(params.outputFormat, config.outputFormat),
-      Note: params.note
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      SID: safeVal(validatedParams.sid, config.sid),
+      WalletNumber: safeVal(validatedParams.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      IPC_Trnref: validatedParams.transactionId,
+      OrderID: safeVal(validatedParams.orderId, generateOrderId()),
+      OutputFormat: safeVal(validatedParams.outputFormat, config.outputFormat),
+      Note: validatedParams.note
     };
     
     super(config, ipcParams);

@@ -3,32 +3,31 @@
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
 const { safeVal, generateOrderId } = require('../utils/common');
+const { validateParams, iaStoreCardUpdateSchema } = require('../config/checkout-schemas');
 
 /**
  * IA Store Card Update Request - Update a stored card
  */
 class IAStoreCardUpdateRequest extends CheckoutRequest {
   constructor(config, params) {
-    // Validate required fields
-    if (!params.cardId) {
-      throw new Error('cardId is required');
-    }
+    // Validate params with Zod schema
+    const validatedParams = validateParams(iaStoreCardUpdateSchema, params, 'IA Store Card Update');
     
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCIAStoreCardUpdate',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
-      Currency: safeVal(params.currency, config.currency),
-      OrderID: safeVal(params.orderId, generateOrderId()),
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      CardToken: params.cardId,
-      URL_OK: safeVal(params.successUrl, config.successUrl),
-      URL_Cancel: safeVal(params.cancelUrl, config.cancelUrl),
-      URL_Notify: safeVal(params.notifyUrl, config.notifyUrl),
-      Note: params.note
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      SID: safeVal(validatedParams.sid, config.sid),
+      WalletNumber: safeVal(validatedParams.walletNumber, config.clientNumber),
+      Currency: safeVal(validatedParams.currency, config.currency),
+      OrderID: safeVal(validatedParams.orderId, generateOrderId()),
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      CardToken: validatedParams.cardId,
+      URL_OK: safeVal(validatedParams.successUrl, config.successUrl),
+      URL_Cancel: safeVal(validatedParams.cancelUrl, config.cancelUrl),
+      URL_Notify: safeVal(validatedParams.notifyUrl, config.notifyUrl),
+      Note: validatedParams.note
     };
     
     super(config, ipcParams);

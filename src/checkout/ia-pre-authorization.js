@@ -4,35 +4,34 @@ const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
 const { buildCartItems, calculateTotal } = require('../utils/cart-builder');
 const { safeVal, generateOrderId } = require('../utils/common');
+const { validateParams, iaPreAuthorizationSchema } = require('../config/checkout-schemas');
 
 /**
  * IA Pre-Authorization Request - Pre-authorize with stored card token
  */
 class IAPreAuthorizationRequest extends CheckoutRequest {
   constructor(config, params) {
-    // Validate required fields
-    if (!params.cardToken) {
-      throw new Error('cardToken is required');
-    }
+    // Validate params with Zod schema
+    const validatedParams = validateParams(iaPreAuthorizationSchema, params, 'IA Pre-Authorization');
     
     // Build and validate cart items
-    const cartItems = buildCartItems(params.cart, params.discount, params.tip);
-    const amount = params.amount !== undefined ? params.amount : calculateTotal(cartItems);
+    const cartItems = buildCartItems(validatedParams.cart, validatedParams.discount, validatedParams.tip);
+    const amount = validatedParams.amount !== undefined ? validatedParams.amount : calculateTotal(cartItems);
     
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCIAPreAuthorization',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      SID: safeVal(validatedParams.sid, config.sid),
+      WalletNumber: safeVal(validatedParams.walletNumber, config.clientNumber),
       Amount: amount,
-      Currency: safeVal(params.currency, config.currency),
-      OrderID: safeVal(params.orderId, generateOrderId()),
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      CardToken: params.cardToken,
-      Note: params.note,
-      OutputFormat: safeVal(params.outputFormat, config.outputFormat),
+      Currency: safeVal(validatedParams.currency, config.currency),
+      OrderID: safeVal(validatedParams.orderId, generateOrderId()),
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      CardToken: validatedParams.cardToken,
+      Note: validatedParams.note,
+      OutputFormat: safeVal(validatedParams.outputFormat, config.outputFormat),
       CartItems: cartItems.length
     };
     

@@ -2,8 +2,8 @@
 
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
-const { validateAmount } = require('../config/validator');
 const { safeVal } = require('../utils/common');
+const { validateParams, sendMoneySchema } = require('../config/checkout-schemas');
 
 /**
  * Send Money Request - Send money to another wallet programmatically
@@ -11,30 +11,21 @@ const { safeVal } = require('../utils/common');
  */
 class SendMoneyRequest extends CheckoutRequest {
   constructor(config, params) {
-    // Validate required fields
-    if (!params.customerWalletNumber) {
-      throw new Error('customerWalletNumber is required');
-    }
-    if (!params.transactionReference) {
-      throw new Error('transactionReference is required');
-    }
-    if (!params.reason) {
-      throw new Error('reason is required');
-    }
-    validateAmount(params.amount);
+    // Validate params with Zod schema
+    const validatedParams = validateParams(sendMoneySchema, params, 'Send Money');
     
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCSendMoney',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      CustomerWalletNumber: params.customerWalletNumber,
-      Amount: params.amount,
-      Currency: safeVal(params.currency, config.currency),
-      TransactionReference: params.transactionReference,
-      Reason: params.reason,
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      OutputFormat: safeVal(params.outputFormat, config.outputFormat)
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      CustomerWalletNumber: validatedParams.customerWalletNumber,
+      Amount: validatedParams.amount,
+      Currency: safeVal(validatedParams.currency, config.currency),
+      TransactionReference: validatedParams.transactionReference,
+      Reason: validatedParams.reason,
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      OutputFormat: safeVal(validatedParams.outputFormat, config.outputFormat)
     };
     
     super(config, ipcParams);

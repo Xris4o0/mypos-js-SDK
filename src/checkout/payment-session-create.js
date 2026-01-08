@@ -4,32 +4,36 @@ const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
 const { buildCartItems, calculateTotal } = require('../utils/cart-builder');
 const { safeVal, generateOrderId } = require('../utils/common');
+const { validateParams, paymentSessionCreateSchema } = require('../config/checkout-schemas');
 
 /**
  * Payment Session Create Request - Create a payment session
  */
 class PaymentSessionCreateRequest extends CheckoutRequest {
   constructor(config, params) {
+    // Validate params with Zod schema
+    const validatedParams = validateParams(paymentSessionCreateSchema, params, 'Payment Session Create');
+    
     // Build and validate cart items
-    const cartItems = buildCartItems(params.cart, params.discount, params.tip);
-    const amount = params.amount !== undefined ? params.amount : calculateTotal(cartItems);
+    const cartItems = buildCartItems(validatedParams.cart, validatedParams.discount, validatedParams.tip);
+    const amount = validatedParams.amount !== undefined ? validatedParams.amount : calculateTotal(cartItems);
     
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCPaymentSessionCreate',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      SID: safeVal(validatedParams.sid, config.sid),
+      WalletNumber: safeVal(validatedParams.walletNumber, config.clientNumber),
       Amount: amount,
-      Currency: safeVal(params.currency, config.currency),
-      OrderID: safeVal(params.orderId, generateOrderId()),
-      URL_OK: safeVal(params.successUrl, config.successUrl),
-      URL_Cancel: safeVal(params.cancelUrl, config.cancelUrl),
-      URL_Notify: safeVal(params.notifyUrl, config.notifyUrl),
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      PaymentParametersRequired: safeVal(params.paymentParametersRequired, config.paymentParametersRequired),
-      Note: params.note,
+      Currency: safeVal(validatedParams.currency, config.currency),
+      OrderID: safeVal(validatedParams.orderId, generateOrderId()),
+      URL_OK: safeVal(validatedParams.successUrl, config.successUrl),
+      URL_Cancel: safeVal(validatedParams.cancelUrl, config.cancelUrl),
+      URL_Notify: safeVal(validatedParams.notifyUrl, config.notifyUrl),
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      PaymentParametersRequired: safeVal(validatedParams.paymentParametersRequired, config.paymentParametersRequired),
+      Note: validatedParams.note,
       CartItems: cartItems.length
     };
     

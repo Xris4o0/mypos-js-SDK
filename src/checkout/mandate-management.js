@@ -3,29 +3,28 @@
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
 const { safeVal, generateOrderId } = require('../utils/common');
+const { validateParams, mandateManagementSchema } = require('../config/checkout-schemas');
 
 /**
  * Mandate Management Request - Manage payment mandates
  */
 class MandateManagementRequest extends CheckoutRequest {
   constructor(config, params) {
-    // Validate required fields
-    if (!params.mandateId) {
-      throw new Error('mandateId is required');
-    }
+    // Validate params with Zod schema
+    const validatedParams = validateParams(mandateManagementSchema, params, 'Mandate Management');
     
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCMandateManagement',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      MandateID: params.mandateId,
-      OrderID: safeVal(params.orderId, generateOrderId()),
-      OutputFormat: safeVal(params.outputFormat, config.outputFormat),
-      Note: params.note
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      SID: safeVal(validatedParams.sid, config.sid),
+      WalletNumber: safeVal(validatedParams.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      MandateID: validatedParams.mandateId,
+      OrderID: safeVal(validatedParams.orderId, generateOrderId()),
+      OutputFormat: safeVal(validatedParams.outputFormat, config.outputFormat),
+      Note: validatedParams.note
     };
     
     super(config, ipcParams);

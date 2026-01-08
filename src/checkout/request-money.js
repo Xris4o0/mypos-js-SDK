@@ -2,8 +2,8 @@
 
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
-const { validateAmount } = require('../config/validator');
 const { safeVal, generateOrderId } = require('../utils/common');
+const { validateParams, requestMoneySchema } = require('../config/checkout-schemas');
 
 /**
  * Request Money Request - Request money from another wallet
@@ -11,37 +11,28 @@ const { safeVal, generateOrderId } = require('../utils/common');
  */
 class RequestMoneyRequest extends CheckoutRequest {
   constructor(config, params) {
-    // Validate required fields
-    if (!params.mandateReference) {
-      throw new Error('mandateReference is required');
-    }
-    if (!params.customerWalletNumber) {
-      throw new Error('customerWalletNumber is required');
-    }
-    if (!params.reason) {
-      throw new Error('reason is required');
-    }
-    validateAmount(params.amount);
+    // Validate params with Zod schema
+    const validatedParams = validateParams(requestMoneySchema, params, 'Request Money');
     
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCRequestMoney',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      MandateReference: params.mandateReference,
-      CustomerWalletNumber: params.customerWalletNumber,
-      OrderID: safeVal(params.orderId, generateOrderId()),
-      Amount: params.amount,
-      Currency: safeVal(params.currency, config.currency),
-      Reason: params.reason,
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      OutputFormat: safeVal(params.outputFormat, config.outputFormat)
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      SID: safeVal(validatedParams.sid, config.sid),
+      MandateReference: validatedParams.mandateReference,
+      CustomerWalletNumber: validatedParams.customerWalletNumber,
+      OrderID: safeVal(validatedParams.orderId, generateOrderId()),
+      Amount: validatedParams.amount,
+      Currency: safeVal(validatedParams.currency, config.currency),
+      Reason: validatedParams.reason,
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      OutputFormat: safeVal(validatedParams.outputFormat, config.outputFormat)
     };
     
     // Add optional reversal indicator if provided
-    if (params.reversalIndicator !== undefined) {
-      ipcParams.ReversalIndicator = params.reversalIndicator;
+    if (validatedParams.reversalIndicator !== undefined) {
+      ipcParams.ReversalIndicator = validatedParams.reversalIndicator;
     }
     
     super(config, ipcParams);

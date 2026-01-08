@@ -3,22 +3,26 @@
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
 const { safeVal } = require('../utils/common');
+const { validateParams, authorizationListSchema } = require('../config/checkout-schemas');
 
 /**
  * Authorization List Request - List authorizations
  */
 class AuthorizationListRequest extends CheckoutRequest {
   constructor(config, params) {
+    // Validate params with Zod schema
+    const validatedParams = validateParams(authorizationListSchema, params, 'Authorization List');
+    
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCAuthorizationList',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      OutputFormat: safeVal(params.outputFormat, config.outputFormat),
-      Note: params.note
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      SID: safeVal(validatedParams.sid, config.sid),
+      WalletNumber: safeVal(validatedParams.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      OutputFormat: safeVal(validatedParams.outputFormat, config.outputFormat),
+      Note: validatedParams.note
     };
     
     super(config, ipcParams);

@@ -4,34 +4,38 @@ const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
 const { buildCartItems, calculateTotal } = require('../utils/cart-builder');
 const { safeVal, generateOrderId, normalizeCustomer } = require('../utils/common');
+const { validateParams, purchaseSchema } = require('../config/checkout-schemas');
 
 /**
  * Purchase Request - Create a payment with cart items
  */
 class PurchaseRequest extends CheckoutRequest {
   constructor(config, params) {
+    // Validate params with Zod schema
+    const validatedParams = validateParams(purchaseSchema, params, 'Purchase');
+    
     // Build and validate cart items
-    const cartItems = buildCartItems(params.cart, params.discount, params.tip);
-    const amount = params.amount !== undefined ? params.amount : calculateTotal(cartItems);
+    const cartItems = buildCartItems(validatedParams.cart, validatedParams.discount, validatedParams.tip);
+    const amount = validatedParams.amount !== undefined ? validatedParams.amount : calculateTotal(cartItems);
     
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCPurchase',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      SID: safeVal(validatedParams.sid, config.sid),
+      WalletNumber: safeVal(validatedParams.walletNumber, config.clientNumber),
       Amount: amount,
-      Currency: safeVal(params.currency, config.currency),
-      OrderID: safeVal(params.orderId, generateOrderId()),
-      URL_OK: safeVal(params.successUrl, config.successUrl),
-      URL_Cancel: safeVal(params.cancelUrl, config.cancelUrl),
-      URL_Notify: safeVal(params.notifyUrl, config.notifyUrl),
-      CardTokenRequest: safeVal(params.cardTokenRequest, config.cardTokenRequest),
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      PaymentParametersRequired: safeVal(params.paymentParametersRequired, config.paymentParametersRequired),
-      PaymentMethod: safeVal(params.paymentMethod, config.paymentMethod),
-      Note: params.note,
+      Currency: safeVal(validatedParams.currency, config.currency),
+      OrderID: safeVal(validatedParams.orderId, generateOrderId()),
+      URL_OK: safeVal(validatedParams.successUrl, config.successUrl),
+      URL_Cancel: safeVal(validatedParams.cancelUrl, config.cancelUrl),
+      URL_Notify: safeVal(validatedParams.notifyUrl, config.notifyUrl),
+      CardTokenRequest: safeVal(validatedParams.cardTokenRequest, config.cardTokenRequest),
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      PaymentParametersRequired: safeVal(validatedParams.paymentParametersRequired, config.paymentParametersRequired),
+      PaymentMethod: safeVal(validatedParams.paymentMethod, config.paymentMethod),
+      Note: validatedParams.note,
       CartItems: cartItems.length
     };
     
@@ -43,39 +47,28 @@ class PurchaseRequest extends CheckoutRequest {
     const paymentParamsRequired = ipcParams.PaymentParametersRequired;
     if (paymentParamsRequired === 1) {
       // Build customer object from either nested customer object or direct parameters
-      let customer = params.customer || {};
+      let customer = validatedParams.customer || {};
       
       // Allow direct parameters to override or supplement customer object
-      if (params.customerEmail) customer.email = params.customerEmail;
-      if (params.customerPhone) customer.phone = params.customerPhone;
-      if (params.customerFirstNames || params.customerFirstName) {
-        customer.firstNames = params.customerFirstNames || params.customerFirstName;
+      if (validatedParams.customerEmail) customer.email = validatedParams.customerEmail;
+      if (validatedParams.customerPhone) customer.phone = validatedParams.customerPhone;
+      if (validatedParams.customerFirstNames || validatedParams.customerFirstName) {
+        customer.firstNames = validatedParams.customerFirstNames || validatedParams.customerFirstName;
       }
-      if (params.customerFamilyName || params.customerLastName) {
-        customer.familyName = params.customerFamilyName || params.customerLastName;
+      if (validatedParams.customerFamilyName || validatedParams.customerLastName) {
+        customer.familyName = validatedParams.customerFamilyName || validatedParams.customerLastName;
       }
-      if (params.customerCountry) customer.country = params.customerCountry;
-      if (params.customerCity) customer.city = params.customerCity;
-      if (params.customerZIPCode || params.customerZipCode) {
-        customer.zipCode = params.customerZIPCode || params.customerZipCode;
+      if (validatedParams.customerCountry) customer.country = validatedParams.customerCountry;
+      if (validatedParams.customerCity) customer.city = validatedParams.customerCity;
+      if (validatedParams.customerZIPCode || validatedParams.customerZipCode) {
+        customer.zipCode = validatedParams.customerZIPCode || validatedParams.customerZipCode;
       }
-      if (params.customerAddress) customer.address = params.customerAddress;
+      if (validatedParams.customerAddress) customer.address = validatedParams.customerAddress;
       
       // Normalize customer field names (accept firstName/firstNames and lastName/familyName)
       customer = normalizeCustomer(customer);
       
-      if (!customer.email) {
-        throw new Error('Customer email is required when PaymentParametersRequired = 1');
-      }
-      if (!customer.phone) {
-        throw new Error('Customer phone is required when PaymentParametersRequired = 1');
-      }
-      if (!customer.firstNames) {
-        throw new Error('Customer firstNames (or firstName) is required when PaymentParametersRequired = 1');
-      }
-      if (!customer.familyName) {
-        throw new Error('Customer familyName (or lastName) is required when PaymentParametersRequired = 1');
-      }
+      // Validation is already done by Zod schema, so we can safely use the values
       ipcParams.CustomerEmail = customer.email;
       ipcParams.CustomerPhone = customer.phone;
       ipcParams.CustomerFirstNames = customer.firstNames;

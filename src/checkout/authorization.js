@@ -2,34 +2,34 @@
 
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
-const { validateAmount } = require('../config/validator');
 const { safeVal, generateOrderId } = require('../utils/common');
+const { validateParams, authorizationSchema } = require('../config/checkout-schemas');
 
 /**
  * Authorization Request - Create an authorization
  */
 class AuthorizationRequest extends CheckoutRequest {
   constructor(config, params) {
-    // Validate required fields
-    validateAmount(params.amount);
+    // Validate params with Zod schema
+    const validatedParams = validateParams(authorizationSchema, params, 'Authorization');
     
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCAuthorization',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
-      Amount: params.amount,
-      Currency: safeVal(params.currency, config.currency),
-      OrderID: safeVal(params.orderId, generateOrderId()),
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      Note: params.note,
-      URL_OK: safeVal(params.successUrl, config.successUrl),
-      URL_Cancel: safeVal(params.cancelUrl, config.cancelUrl),
-      URL_Notify: safeVal(params.notifyUrl, config.notifyUrl),
-      CardTokenRequest: safeVal(params.cardTokenRequest, config.cardTokenRequest),
-      PaymentParametersRequired: safeVal(params.paymentParametersRequired, config.paymentParametersRequired)
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      SID: safeVal(validatedParams.sid, config.sid),
+      WalletNumber: safeVal(validatedParams.walletNumber, config.clientNumber),
+      Amount: validatedParams.amount,
+      Currency: safeVal(validatedParams.currency, config.currency),
+      OrderID: safeVal(validatedParams.orderId, generateOrderId()),
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      Note: validatedParams.note,
+      URL_OK: safeVal(validatedParams.successUrl, config.successUrl),
+      URL_Cancel: safeVal(validatedParams.cancelUrl, config.cancelUrl),
+      URL_Notify: safeVal(validatedParams.notifyUrl, config.notifyUrl),
+      CardTokenRequest: safeVal(validatedParams.cardTokenRequest, config.cardTokenRequest),
+      PaymentParametersRequired: safeVal(validatedParams.paymentParametersRequired, config.paymentParametersRequired)
     };
     
     super(config, ipcParams);

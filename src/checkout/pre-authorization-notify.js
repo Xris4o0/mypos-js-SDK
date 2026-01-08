@@ -3,22 +3,26 @@
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
 const { safeVal } = require('../utils/common');
+const { validateParams, preAuthorizationNotifySchema } = require('../config/checkout-schemas');
 
 /**
  * Pre-Authorization Notify Request - Handle pre-authorization notification
  */
 class PreAuthorizationNotifyRequest extends CheckoutRequest {
   constructor(config, params) {
+    // Validate params with Zod schema
+    const validatedParams = validateParams(preAuthorizationNotifySchema, params, 'Pre-Authorization Notify');
+    
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCPreAuthorizationNotify',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      IPC_Trnref: params.transactionId,
-      OutputFormat: safeVal(params.outputFormat, config.outputFormat)
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      SID: safeVal(validatedParams.sid, config.sid),
+      WalletNumber: safeVal(validatedParams.walletNumber, config.clientNumber),
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      IPC_Trnref: validatedParams.transactionId,
+      OutputFormat: safeVal(validatedParams.outputFormat, config.outputFormat)
     };
     
     super(config, ipcParams);

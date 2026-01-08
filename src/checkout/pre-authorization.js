@@ -3,6 +3,7 @@
 const CheckoutRequest = require('../core/checkout-request');
 const { loadConfig } = require('../config');
 const { safeVal, generateOrderId } = require('../utils/common');
+const { validateParams, preAuthorizationSchema } = require('../config/checkout-schemas');
 
 /**
  * Pre-Authorization Request - Create a pre-authorization
@@ -10,32 +11,26 @@ const { safeVal, generateOrderId } = require('../utils/common');
  */
 class PreAuthorizationRequest extends CheckoutRequest {
   constructor(config, params) {
-    // Validate required fields
-    if (!params.amount && typeof params.amount !== 'number') {
-      throw new Error('amount is required for pre-authorization');
-    }
-    
-    if (!params.itemName && !params.ItemName) {
-      throw new Error('itemName is required for pre-authorization');
-    }
+    // Validate params with Zod schema
+    const validatedParams = validateParams(preAuthorizationSchema, params, 'Pre-Authorization');
     
     // Map to IPC parameters
     const ipcParams = {
       IPCmethod: 'IPCPreAuthorization',
-      IPCVersion: safeVal(params.version, config.version),
-      IPCLanguage: safeVal(params.lang, config.lang),
-      SID: safeVal(params.sid, config.sid),
-      WalletNumber: safeVal(params.walletNumber, config.clientNumber),
-      Amount: params.amount,
-      Currency: safeVal(params.currency, config.currency),
-      OrderID: safeVal(params.orderId, generateOrderId()),
-      URL_OK: safeVal(params.successUrl, config.successUrl),
-      URL_Cancel: safeVal(params.cancelUrl, config.cancelUrl),
-      URL_Notify: safeVal(params.notifyUrl, config.notifyUrl),
-      KeyIndex: safeVal(params.keyIndex, config.keyIndex),
-      ItemName: params.itemName || params.ItemName,
-      AccountSettlement: params.accountSettlement || params.AccountSettlement,
-      Note: params.note
+      IPCVersion: safeVal(validatedParams.version, config.version),
+      IPCLanguage: safeVal(validatedParams.lang, config.lang),
+      SID: safeVal(validatedParams.sid, config.sid),
+      WalletNumber: safeVal(validatedParams.walletNumber, config.clientNumber),
+      Amount: validatedParams.amount,
+      Currency: safeVal(validatedParams.currency, config.currency),
+      OrderID: safeVal(validatedParams.orderId, generateOrderId()),
+      URL_OK: safeVal(validatedParams.successUrl, config.successUrl),
+      URL_Cancel: safeVal(validatedParams.cancelUrl, config.cancelUrl),
+      URL_Notify: safeVal(validatedParams.notifyUrl, config.notifyUrl),
+      KeyIndex: safeVal(validatedParams.keyIndex, config.keyIndex),
+      ItemName: validatedParams.itemName || validatedParams.ItemName,
+      AccountSettlement: validatedParams.accountSettlement || validatedParams.AccountSettlement,
+      Note: validatedParams.note
     };
     
     super(config, ipcParams);
